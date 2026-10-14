@@ -9,6 +9,16 @@ const serviceName = p => [p.fixer && '王尔德的善后人', p.evidence && '清
 const dayName = day => day === 1 ? '第 1 天（当天）' : `第 ${day} 天`;
 const finishDay = p => p.days + 1;
 let input, plans = [], best = -1, generated = null;
+function captureFields() {
+  return {fields:Object.fromEntries([...$('form').querySelectorAll('input[id],select[id]')].map(n=>[n.id,n.type==='checkbox'?n.checked:n.value])),crimes:crimeRows('crime-rows'),sales:crimeRows('sale-rows')};
+}
+function restoreFields(saved) {
+  for(const n of $('form').querySelectorAll('input[id],select[id]'))if(Object.hasOwn(saved.fields,n.id)){
+    if(n.type==='checkbox')n.checked=saved.fields[n.id];else n.value=saved.fields[n.id];
+  }
+  for(const [id,rows] of [['crime-rows',saved.crimes],['sale-rows',saved.sales]]){$(id).replaceChildren();for(const row of rows)addCrimeRow(id,row.type,row.amount);}
+  syncFields();
+}
 function crimeRows(id) {
   return [...$(id).children].map(row => ({type: row.querySelector('select').value, amount: row.querySelector('input').value}));
 }
@@ -82,6 +92,7 @@ function selectPlan(index) {
   [...$('plans').children].forEach((b,j) => {b.classList.toggle('selected',j === index);b.setAttribute('aria-pressed',String(j === index));});
   $('recommendation').classList.toggle('warn', !good);
   $('schedule').hidden = !good; $('empty-schedule').hidden = good;
+  $('recovery-options').hidden = good;
   $('result-scope').textContent = generated.draft.sales ? '当前＋本次预计新增 · 按今天入账试算' : generated.draft.split ? '按不同罪名分别核算' : '按总计保守核算';
   $('forecast-notice').hidden = false;
   if (!good) {
@@ -144,6 +155,7 @@ function renderSales() {
   }
 }
 function renderCaps() {
+  $('amount-caps').hidden = false;
   $('caps-context').textContent = `治安部声望 ${input.rep} · 上层区${generated.draft.upperRange} · 调查进度 ${input.progress}。沿用本次警官情况及清除证据冷却。`;
   const cells = [[false,false],[true,false],[true,true]].map(([fixer,evidence]) => {
     if ((fixer && !generated.draft.fixer) || (evidence && generated.draft.availability === 'unavailable')) return '<td>服务不可用</td>';
@@ -174,7 +186,7 @@ function run() {
     Crime.validate(candidate);
     const nextPlans = Crime.planOptions(candidate,$('fixer').checked,$('availability').value !== 'unavailable');
     input = candidate; plans = nextPlans;
-    const d = draft(); generated = {draft:d, key:JSON.stringify(d)};
+    const d = draft(); generated = {draft:d, key:JSON.stringify(d), fields:captureFields()};
     $('error').hidden = true; $('comparison').hidden = false; $('snapshot').hidden = false;
     $('snapshot-values').textContent = describeDraft(d);
     const eligible = plans.map((p,index) => ({...p,index})).filter(Crime.success).sort((a,b) => a.loss-b.loss || a.fineTotal-b.fineTotal || Number(a.fixer)+Number(a.evidence)-Number(b.fixer)-Number(b.evidence) || a.resets.length-b.resets.length || a.days-b.days);
@@ -215,18 +227,17 @@ $('sales').addEventListener('change',()=>{
   markDraft();
 });
 document.querySelectorAll('[data-add-crime]').forEach(b => b.addEventListener('click', () => {addCrimeRow(b.dataset.addCrime); markDraft();}));
-document.querySelectorAll('[data-example]').forEach(b=>b.addEventListener('click',()=>{
-  $('amount').value=13276;$('rep').value=60;$('progress').value=0;$('upper').value=$('upper').dataset.reputation === 'range' ? 0 : 27;
-  $('fixer').checked=true;$('availability').value='ready';$('cooldown').value=1;$('officer').value='auto';$('split').checked=false;$('sales').checked=false;
-  $('error').hidden=true;markDraft();$('input-state').textContent='示例已填入，请点击「生成清理方案」。';$('form').scrollIntoView({block:'start'});
-}));
-document.querySelectorAll('[data-future]').forEach(b=>b.addEventListener('click',()=>{$('future-title').textContent=b.dataset.future;$('future-dialog').showModal();}));
-document.querySelectorAll('#future-dialog .close,#future-dialog .close-dialog').forEach(b=>b.addEventListener('click',()=>$('future-dialog').close()));
-$('caps-link').addEventListener('click',()=>$('amount-caps').open=true);
-document.querySelector('a[href="#mechanics"]').addEventListener('click',()=>$('mechanics').open=true);
-document.querySelectorAll('a[href="#plan-guide"]').forEach(a=>a.addEventListener('click',()=>$('plan-guide').open=true));
 document.querySelector('.game-version').addEventListener('click',()=>$('research').open=true);
 markDraft();
+
+ToolSession.bind('crime',()=>({fields:captureFields(),generated:generated?.fields,selected:[...$('plans').children].findIndex(n=>n.classList.contains('selected'))}));
+const savedSession=ToolSession.read('crime');
+if(savedSession){
+  try{
+    if(savedSession.generated){restoreFields(savedSession.generated);run();if(savedSession.selected>=0&&Crime.success(plans[savedSession.selected]))selectPlan(savedSession.selected);}
+    restoreFields(savedSession.fields);markDraft();
+  }catch{$('error').textContent='上次输入未能完整恢复，请核对当前数字后重新生成方案。';$('error').hidden=false;}
+}
 
 // Keep scrolling from silently changing focused numeric inputs.
 document.addEventListener('wheel',e=>{if(e.target.matches('input[type=number]') && document.activeElement===e.target)e.preventDefault();},{passive:false});

@@ -1,0 +1,14 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const data=new Map(),events={},docEvents={};
+const window={sessionStorage:{getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,v),removeItem:k=>data.delete(k)},addEventListener:(n,f)=>events[n]=f,document:{addEventListener:(n,f)=>docEvents[n]=f}};
+vm.runInNewContext(fs.readFileSync(require('node:path').join(__dirname,'../dist/assets/tool-session.js'),'utf8'),{window});
+const S=window.ToolSession;
+assert.equal(S.read('missing'),null);
+S.write('crime',{amount:'1234'});S.write('assembler',{locks:['1742']});
+assert.equal(S.read('crime').amount,'1234');assert.equal(S.read('assembler').locks[0],'1742');
+let value=1;S.bind('crime',()=>({value}));value=2;events.pagehide();assert.equal(S.read('crime').value,2);
+value=3;docEvents.click({target:{closest:()=>true}});assert.equal(S.read('crime').value,3);
+data.set('probably-stolen:crime:v1','bad');assert.equal(S.read('crime'),null);
+window.sessionStorage.setItem=()=>{throw Error('QuotaExceededError');};
+assert.equal(S.write('assembler',{}),false);assert.equal(S.read('assembler'),null,'Do not restore stale state after a failed save');
+console.log('PASS separate per-tool drafts, capture on navigation, corrupt storage, quota failure');

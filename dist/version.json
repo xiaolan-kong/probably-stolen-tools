@@ -1,6 +1,7 @@
 {
-  "version": "0.1.0-rc.3",
+  "version": "0.2.0",
   "rules": "Demo 049-Rev5-L",
-  "checkedDate": "2026-10-14",
-  "feedback": "connected"
+  "checkedDate": "2026-10-15",
+  "feedback": "connected",
+  "assembler": "single-and-joint"
 }

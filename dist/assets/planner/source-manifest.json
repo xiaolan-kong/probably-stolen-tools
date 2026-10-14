@@ -1,0 +1,24 @@
+{
+  "source": "Module Assembler active worktree",
+  "commit": "65ba6c02c31618cc75fa2f08399e9e88890f10f9",
+  "files": {
+    "Planning/BudgetedSearch.cs": "797ef9017f489da76c0b4f0abfb1b65b2a4a248b635f19ac9e3dea12fe6b17f0",
+    "Planning/ExhaustiveLayouts.cs": "aa4408b32cc0f04b3dba60bfd7d3681cccd0cdbbfbc4a7c7ead2e673a028572f",
+    "Planning/JointPlanner.cs": "74fb303e32238f893de7958a2ccda4f5292f633634149ac4b463eaeabd2d7454",
+    "Planning/LayoutEvaluationCache.cs": "855824b18e3de48e4fd9d6740f8b812c204e100eea34461630f41d61d6dff686",
+    "Planning/MachinePlanner.cs": "1c3cfc494ce2d4d338bdc8ddd172ec9ae8cfa30c6099c1df2f6f6cbd4eb4147f",
+    "Planning/MachineProfile.cs": "5184ef628ba48734a6da2c9e820e52e172c535c150e4aa056266a1ec0ca64b75",
+    "Planning/MachineRules.cs": "f30be0aec387ae136c11de3052b4ad3e6abe0e9fd8eaca1dc669a76ed9a26831",
+    "Planning/MoistureEvaluator.cs": "049d785392184f51a9953e9999ed94d68c83823f39f894626fcf0ffa7ed77434",
+    "Planning/MoisturePlanner.cs": "314cf0f3139d8f9aa5581c260b5a546354822f9dd27d99438ead541c277a2e2b",
+    "Planning/PieceSelection.cs": "2480ff86134c0790c41ff356d85c15948bfe70481fcb0e6d7def7e6a55a74fba",
+    "Planning/PlanningModel.cs": "a10f781bee1ad1bc9425206ac2acac9445af3c3ee921cfac0c17e9e35e3db4b5",
+    "Planning/ResourcePreference.cs": "4349406df2baf4fcb758495adc256bfbe3869ccde8a41bf1e822651ad0936a55",
+    "Planning/ResultCategories.cs": "b37722bf8b538f9c78b135e21c149433271f83eb3d795697c06df487582424e6",
+    "Planning/SearchProgress.cs": "5ea02570d87cffaf55c9feb5c2119f0bb290c77e61fd2f16e1b324a3503aceb9",
+    "Runtime/L.cs": "3b7d3c0bfb91998279c2552b16c441a25b84b868769b34c40bd3eeb0efd8da6d",
+    "Runtime/English.json": "c4fa9cfcdbf8204eeeda02d102eb2411b2ad5ef36dae9d4984f3693c8403d1cc",
+    "Runtime/StoreAttraction.cs": "81e8be37cec75b1e8222d23d96187c35c08374940ccaca73b285ad57d540c5aa",
+    "Runtime/MachineTargetPolicy.cs": "fb31173ccf3ebbeddf63178b90297e74fe95d5893465160604f1539efacd8952"
+  }
+}

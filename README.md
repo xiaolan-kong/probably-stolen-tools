@@ -1,12 +1,12 @@
 # 深空当铺工具站
 
-试用版 `v0.1.0-rc.3`，适用游戏 `Demo 049-Rev5-L`。犯罪金额计算器、服务方案比较、逐日安排、准确声望、分类罪行与当天追加额度。无需安装依赖或登录；计算在浏览器完成，主题偏好保存在本机。
+试用版 `v0.2.0`，适用游戏 `Demo 049-Rev5-L`。犯罪金额计算器、服务方案比较、逐日安排、准确声望、分类罪行与当天追加额度。无需安装依赖或登录；计算在浏览器完成，主题偏好保存在本机。
 
-文字＋图片反馈已接通 Supabase，玩家免登录提交，用私有查询链接查看处理结果；管理员在 `admin.html` 登录、查看、回复。模块组装器仍在规划中。
+文字＋图片反馈已接通 Supabase，玩家免登录提交，用私有查询链接查看处理结果；管理员在 `admin.html` 登录、查看、回复。模块组装器支持真实存档、单机与联合装配、共享锁定、按步骤装配指导和实时最佳方案。
 
 ## 发布到 GitHub Pages
 
-正式站点：https://xiaolan-kong.github.io/probably-stolen-tools/ 。仓库 `xiaolan-kong/probably-stolen-tools`，发布分支 `main`；本包为 v0.1.0-rc.3 更新候选。以 GitHub Actions 成功与公开资源核验为上线依据。
+正式站点：https://xiaolan-kong.github.io/probably-stolen-tools/ 。仓库 `xiaolan-kong/probably-stolen-tools`，发布分支 `main`；本包为 v0.2.0 更新候选。以 GitHub Actions 成功与公开资源核验为上线依据。
 
 1. 确认公开发布后，将本文件夹内容上传到目标 GitHub 仓库；不要上传整个素材文件夹、本机研究证据、截图、存档或游戏程序。
 2. 仓库 **Settings → Pages → Source** 选择 **GitHub Actions**。
@@ -30,6 +30,11 @@ node tests/fines.test.cjs
 node tests/crime-types.test.cjs
 node tests/analytics.test.cjs
 node tests/feedback-api.test.mjs
+node tests/assembler.test.cjs
+node tests/assembler-sprites.test.cjs
+node tests/assembler-local-pieces.test.cjs
+node tests/assembler-retention.test.cjs
+node tests/tool-session.test.cjs
 node tests/release.test.cjs
 ```
 
@@ -38,6 +43,12 @@ node tests/release.test.cjs
 首次上线后：检查 HTTPS、所有资源、手机布局、满100和冷却输入、方案切换与修改后重新生成。用中国大陆节点测试实际页面及图标；之前第三方测试页可访问不能代替本站验收。正式网址确定前没有添加域名、canonical或sitemap。
 
 回滚：保留前一次已验证版本，恢复其 `dist` 与对应清单，再手动运行工作流；不要只回滚一份脚本造成规则与界面错配。
+
+## 模块组装器
+
+存档在浏览器本机解析，不上传、不改写。单机与联合共享导入数据、锁定和操作进度；切换工具页面保留当前标签页的数据。搜索使用同源 Mod 核心的 WebAssembly 产物，标准约 1 分钟，深度最多 5 分钟；同条件保留历史最佳并实时展示效果，可以随时停止。限时搜索不保证全局最优。
+
+网页不能感知游戏中实际搬移；照图操作后确认装好并锁定，或保存游戏后重新导入。适用 Demo 049-Rev5-L；已完成真实存档离线核验及 Native/WASM 对照，尚未进行游戏内照图装配验收。
 
 ## 规则与边界
 
@@ -59,9 +70,9 @@ node tests/release.test.cjs
 
 ## 后续方向
 
-本版先上线计算器；后续参考 [Probably Stolen Wiki](https://probably-stolen.nicokobo.com/zh) 的攻略组织方式，将现有攻略集中到工具站。本版未迁移或复制对方内容。
+本版包含计算器和模块组装器；后续参考 [Probably Stolen Wiki](https://probably-stolen.nicokobo.com/zh) 的攻略组织方式，将现有攻略集中到工具站。本版未迁移或复制对方内容。
 
-游戏名称、服务名称及两枚服务图标来自 Probably Stolen，相关权利归原权利人；本站为非官方玩家工具。此仓库不包含游戏程序、反汇编或玩家存档，未给游戏素材附加开源授权。
+游戏名称、服务名称、机器和模组图片来自 Probably Stolen，相关权利归原权利人；本站为非官方玩家工具。此仓库不包含游戏程序、反汇编或玩家存档，未给游戏素材附加开源授权。
 
 ## 部署依据
 

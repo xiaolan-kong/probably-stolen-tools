@@ -17,7 +17,8 @@ for (const file of actual) {
 }
 for (const page of actual.filter(f=>f.endsWith('.html'))) {
  const pageHtml=fs.readFileSync(path.join(dist,page),'utf8');
- for (const [,ref] of pageHtml.matchAll(/(?:src|href)="([^"]+)"/g)) {
+ for (const [,attribute,ref] of pageHtml.matchAll(/(src|href)="([^"]+)"/g)) {
+  if(attribute==='href'&&ref.startsWith('https://'))continue;
   if (ref.startsWith('#')) {assert(pageHtml.includes(`id="${ref.slice(1)}"`), `Missing anchor ${ref}`);continue;}
   if (ref === './') continue;
   assert(!/^(?:https?:|\/|data:)/.test(ref), `Resource must work under a repository subpath: ${ref}`);
@@ -35,7 +36,14 @@ assert(config.includes('https://qeidtbijsdfbkcpwxmfa.supabase.co/functions/v1/fe
 for (const file of actual.filter(f=>f.endsWith('.js'))) {
  const source=fs.readFileSync(path.join(dist,file),'utf8');
  assert(!/(?:sb_secret_|service_role|SUPABASE_SERVICE_ROLE_KEY|FEEDBACK_ADMIN_IDS)/.test(source),`Server credentials/config in ${file}`);
- if(file!=='assets/feedback-common.js')assert(!/\b(fetch\s*\(|XMLHttpRequest|sendBeacon\s*\(|WebSocket\s*\()/.test(source),`Unexpected network code in ${file}`);
+ if(file!=='assets/feedback-common.js'&&!/^assets\/planner\/_framework\/dotnet(?:\.[a-z0-9]+)*\.js$/.test(file))assert(!/\b(fetch\s*\(|XMLHttpRequest|sendBeacon\s*\(|WebSocket\s*\()/.test(source),`Unexpected network code in ${file}`);
+}
+const runtime=fs.readFileSync(path.join(dist,'assets/planner/_framework/dotnet.js'),'utf8');
+const runtimeConfig=JSON.parse(runtime.split('/*json-start*/')[1].split('/*json-end*/')[0]);
+for(const group of Object.values(runtimeConfig.resources))if(Array.isArray(group))for(const asset of group){
+ assert.equal(path.basename(asset.name),asset.name);
+ const bytes=fs.readFileSync(path.join(dist,'assets/planner/_framework',asset.name));
+ if(asset.hash)assert.equal('sha256-'+crypto.createHash('sha256').update(bytes).digest('base64'),asset.hash,`Runtime integrity: ${asset.name}`);
 }
 for(const page of ['admin.html','feedback.html'])assert(fs.readFileSync(path.join(dist,page),'utf8').includes('content="noindex"'));
 const workflow = fs.readFileSync(path.join(root,'.github/workflows/pages.yml'),'utf8');
