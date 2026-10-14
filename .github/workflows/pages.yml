@@ -1,0 +1,50 @@
+name: Publish GitHub Pages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Check rules and release files
+        run: |
+          node tests/model.test.cjs
+          node tests/ranges.test.cjs
+          node tests/theme.test.cjs
+          node tests/additions.test.cjs
+          node tests/feedback-api.test.mjs
+          node tests/release.test.cjs
+      - name: Check feedback allows this Pages origin
+        env:
+          PAGES_OWNER: ${{ github.repository_owner }}
+        run: node tests/feedback-origin.test.cjs
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+  deploy:
+    needs: check
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy checked files
+        id: deployment
+        uses: actions/deploy-pages@v4
