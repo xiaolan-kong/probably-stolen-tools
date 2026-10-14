@@ -7,7 +7,6 @@
   if(feedbackBase){
     document.querySelector('.feedback-notice').textContent='仅在提交时发送你填写的文字、图片和勾选的附带信息。截图请避开账号、密码等私人内容。';
     submit.textContent='提交反馈';
-    document.querySelector('.privacy-note').textContent='计算在本机 · 反馈由你提交';
   } else {
     document.querySelector('.feedback-notice').textContent='接收后台尚未配置，填写内容和图片不会发送。';
     submit.textContent='检查反馈内容';
