@@ -4,9 +4,11 @@
 
 文字＋图片反馈已接通 Supabase，玩家免登录提交，用私有查询链接查看处理结果；管理员在 `admin.html` 登录、查看、回复。模块组装器仍在规划中。
 
+[打开工具站](https://xiaolan-kong.github.io/probably-stolen-tools/) · [反馈后台](https://xiaolan-kong.github.io/probably-stolen-tools/admin.html)
+
 ## 发布到 GitHub Pages
 
-本文件夹就是仓库根目录。建议仓库名 `probably-stolen-tools`，首次发布使用 `main`。当前包仅准备好，尚未上传或部署；账号和实际仓库地址需在发布时确认。
+已于 2026-10-14 发布至 `xiaolan-kong/probably-stolen-tools`。线上版本 `v0.1.0-rc.2`，部署提交 `836f6cc001baebd1e77ef11e23ed4544e50bdcd9`。[首次发布检查与部署均通过](https://github.com/xiaolan-kong/probably-stolen-tools/actions/runs/38506381011)。以下步骤供后续维护参考。
 
 1. 确认公开发布后，将本文件夹内容上传到目标 GitHub 仓库；不要上传整个素材文件夹、本机研究证据、截图、存档或游戏程序。
 2. 仓库 **Settings → Pages → Source** 选择 **GitHub Actions**。
@@ -46,7 +48,7 @@ node tests/release.test.cjs
 
 反馈初期限额：每条3000字、最多3张图片（每张5 MB），全站滚动24小时最多30条，总图片预留750 MiB。免费项目连续7天低活跃可能暂停，需要站主在 Supabase 恢复；没有付费升级或自动保活。后台会话保留在当前页面内存，刷新后需重新登录。没有邮件通知、追加消息或公开反馈列表。
 
-已完成本地页面到真实云端的提交、图片读取、管理员回复、刷新查询及权限拒绝检查。正式 GitHub 地址和大陆节点的访问／上传尚需上线后验收；当前网络联调不代表大陆直连保证。Supabase 架构在 `backend/supabase`，这些文件不属于 Pages 上传的 `dist`。
+正式站点已完成：17 个公开资源与发布清单逐项哈希一致；示例计算、修改后重新生成、调查满100与冷却输入、单独善后人方案；剪贴板截图和文字提交、管理员登录与回复、玩家刷新查看回复及图片。未登录管理接口返回401，错误查询凭证404，非法Origin403，图片公开访问被拒绝。本机绕过应用代理访问首页200、反馈预检204；这不构成大陆所有运营商或实际手机的可达保证。Supabase 架构在 `backend/supabase`，这些文件不属于 Pages 上传的 `dist`。
 
 游戏名称、服务名称及两枚服务图标来自 Probably Stolen，相关权利归原权利人；本站为非官方玩家工具。此仓库不包含游戏程序、反汇编或玩家存档，未给游戏素材附加开源授权。
 
