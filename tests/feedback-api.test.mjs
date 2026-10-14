@@ -2,11 +2,14 @@ import assert from 'node:assert/strict';
 import {createHandler} from '../backend/supabase/functions/feedback/handler.mjs';
 const origin='https://player.example',base='https://project.supabase.co',tickets=new Map(),objects=new Map();
 let uploadsFail=false,quota=false;
+const views=[];
 const json=(body,status=200)=>new Response(JSON.stringify(body),{status});
 const mock=async(address,options={})=>{
   const u=new URL(address),method=options.method||'GET',body=typeof options.body==='string'?JSON.parse(options.body):options.body;
   if(u.pathname==='/auth/v1/token')return body.password==='correct'?json({access_token:'admin-session',expires_in:3600,user:{id:'owner'}}):json({error:'invalid_grant'},400);
   if(u.pathname==='/auth/v1/user')return options.headers.Authorization==='Bearer admin-session'?json({id:'owner'}):json({id:'stranger'});
+  if(u.pathname==='/rest/v1/rpc/record_page_view'){views.push(body);return json(null);}
+  if(u.pathname==='/rest/v1/page_views_daily'){assert.match(u.searchParams.get('day'),/^gte\.\d{4}-\d{2}-\d{2}$/);return json([{day:'2026-10-14',page:'calculator',views:3}]);}
   if(u.pathname==='/rest/v1/rpc/reserve_feedback'){
     const previous=tickets.get(body.p_id);
     if(previous){if(previous.token_hash!==body.p_token_hash||previous.payload_hash!==body.p_payload_hash)return json({message:'feedback_conflict'},400);return json({state:previous.upload_state});}
@@ -60,4 +63,16 @@ assert.equal((await request('/admin/tickets/'+id,{method:'PATCH',headers:auth,bo
 assert.equal((await (await request('/tickets/'+id,{headers:{'X-Feedback-Token':token}})).json()).reply,'已核对，谢谢。');
 quota=true;assert.equal((await request('/tickets',{method:'POST',body:form({ticketId:crypto.randomUUID()})})).status,429);
 assert.equal((await createHandler({})(new Request(base))).status,503);
+assert.equal((await request('/page-view',{method:'POST',body:JSON.stringify({page:'calculator'})})).status,200);
+assert.equal((await request('/page-view',{method:'POST',body:JSON.stringify({page:'feedback'})})).status,200);
+assert.deepEqual(views,[{p_page:'calculator'},{p_page:'feedback'}]);
+for(const body of [null,{}, {page:'admin'},{page:'calculator',amount:500},{page:'https://example.com/private#secret'}]){
+ assert.equal((await request('/page-view',{method:'POST',body:JSON.stringify(body)})).status,400);
+}
+assert.equal((await request('/page-view',{method:'POST',headers:{Origin:'https://evil.example'},body:JSON.stringify({page:'calculator'})})).status,403);
+assert.equal((await request('/admin/analytics')).status,401);
+assert.equal((await request('/admin/analytics',{headers:{Authorization:'Bearer stranger'}})).status,403);
+assert.deepEqual(await (await request('/admin/analytics',{headers:auth})).json(),[{day:'2026-10-14',page:'calculator',views:3}]);
+assert.equal(views.length,2,'Invalid telemetry must never reach storage');
+console.log('PASS: page counters accept only page enum; reject extra data; enforce origin and admin-only analytics.');
 console.log('PASS: API origin/auth/access controls, body and image limits, private receipts, upload failure/retry/idempotency, admin replies, quota handling. Storage/Auth transport mocked; cloud schema and real persistence require deployment.');

@@ -21,7 +21,7 @@ for (const page of actual.filter(f=>f.endsWith('.html'))) {
   if (ref.startsWith('#')) {assert(pageHtml.includes(`id="${ref.slice(1)}"`), `Missing anchor ${ref}`);continue;}
   if (ref === './') continue;
   assert(!/^(?:https?:|\/|data:)/.test(ref), `Resource must work under a repository subpath: ${ref}`);
-  assert(fs.existsSync(path.join(dist, ref)), `Missing resource ${ref}`);
+  assert(fs.existsSync(path.join(dist, ref.split(/[?#]/)[0])), `Missing resource ${ref}`);
  }
 }
 assert(html.includes('name="description"'));

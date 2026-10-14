@@ -24,6 +24,9 @@ jobs:
           node tests/ranges.test.cjs
           node tests/theme.test.cjs
           node tests/additions.test.cjs
+          node tests/fines.test.cjs
+          node tests/crime-types.test.cjs
+          node tests/analytics.test.cjs
           node tests/feedback-api.test.mjs
           node tests/release.test.cjs
       - name: Check feedback allows this Pages origin

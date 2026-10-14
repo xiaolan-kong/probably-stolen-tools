@@ -67,6 +67,12 @@ export function createHandler(config,fetcher=fetch) {
       if(!origins.includes(origin))fail(403,'请求来源未获允许。');
       if(request.method==='OPTIONS')return new Response(null,{status:204,headers});
       const pathname=new URL(request.url).pathname.replace(/^.*\/feedback(?=\/|$)/,'').replace(/\/$/,'')||'/';
+      if(pathname==='/page-view'&&request.method==='POST'){
+        const body=await jsonBody(request);
+        if(!body||Object.keys(body).length!==1||!['calculator','feedback'].includes(body.page))fail(400,'页面类型无效。');
+        await api('/rest/v1/rpc/record_page_view',{method:'POST',body:{p_page:body.page}});
+        return respond({ok:true});
+      }
       if(pathname==='/tickets'&&request.method==='POST'){
         let form;try{form=await new Request('https://local.invalid',{method:'POST',headers:{'content-type':request.headers.get('content-type')||''},body:await bodyBytes(request)}).formData();}catch(e){if(e.status)throw e;fail(400,'提交格式错误。');}
         const id=form.get('id'),token=form.get('token'),category=form.get('category'),message=form.get('message'),context=form.get('context')||'';
@@ -102,6 +108,10 @@ export function createHandler(config,fetcher=fetch) {
       }
       if(pathname.startsWith('/admin/')){
         await admin(request);
+        if(pathname==='/admin/analytics'&&request.method==='GET'){
+          const since=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(Date.now()-29*86400000));
+          return respond(await api(`/rest/v1/page_views_daily?day=gte.${since}&select=day,page,views&order=day.desc,page.asc&limit=60`));
+        }
         if(pathname==='/admin/tickets'&&request.method==='GET'){
           const page=Number(new URL(request.url).searchParams.get('page')||'0');if(!Number.isInteger(page)||page<0||page>10000)fail(400,'页码无效。');
           return respond(await api(`/rest/v1/feedback_tickets?upload_state=eq.ready&select=id,category,message,status,created_at&order=created_at.desc,id.desc&limit=50&offset=${page*50}`));

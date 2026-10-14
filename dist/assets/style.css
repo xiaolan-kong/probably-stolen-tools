@@ -52,3 +52,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   .reputation-fields option:hover,.reputation-fields option:focus-visible{background:var(--surface);outline:none}
   .reputation-fields option:checked{background:var(--accent-soft);color:var(--accent-text);font-weight:600;box-shadow:inset 3px 0 var(--accent)}
 }
+
+#caps-values td{font-variant-numeric:tabular-nums}#caps-values small{display:block;font-size:13px;color:var(--muted);font-weight:400;margin-top:4px}
+.crime-row{display:grid;grid-template-columns:minmax(0,1fr) 92px 26px;gap:6px;margin:10px 0;align-items:center}.crime-row select,.crime-row input{min-width:0;width:100%;font-size:14px;padding:10px 6px}.crime-row button{font-size:23px;color:var(--muted);min-height:40px}.add-crime,.sales-cap button{color:var(--accent-text);padding:8px 0;text-align:left}.mechanics-result{margin:22px 0;padding:16px;background:var(--surface);border-radius:8px}.mechanics-result h3{margin-top:0}.mechanics-result p,.sales-cap p{font-size:15px;line-height:1.8}.sales-cap{padding:16px 0;border-top:1px solid var(--line)}.sales-cap p{margin:6px 0}#mechanics .caps-scroll{overflow:auto}#mechanics h3{margin-top:24px}
+@media(max-width:400px){.crime-row{grid-template-columns:minmax(0,1fr) 80px 24px;gap:4px}.crime-row select{font-size:13px}}
