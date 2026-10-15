@@ -23,11 +23,11 @@ async function loadAnalytics(){
   try {
     const rows=await adminRequest('/analytics');
     const days=new Map();let total=0;
-    for(const row of rows){const value=Number(row.views);total+=value;const counts=days.get(row.day)||{calculator:0,feedback:0};counts[row.page]=value;days.set(row.day,counts);}
+    for(const row of rows){const value=Number(row.views);total+=value;const counts=days.get(row.day)||{calculator:0,assembler:0,feedback:0};counts[row.page]=value;days.set(row.day,counts);}
     adminEl('analytics-rows').replaceChildren();
     for(const [day,counts] of days){
       const tr=document.createElement('tr');
-      for(const value of [day,counts.calculator+counts.feedback,counts.calculator,counts.feedback]){const td=document.createElement('td');td.textContent=typeof value==='number'?value.toLocaleString('zh-CN'):value;tr.append(td);}
+      for(const value of [day,counts.calculator+counts.assembler+counts.feedback,counts.calculator,counts.assembler,counts.feedback]){const td=document.createElement('td');td.textContent=typeof value==='number'?value.toLocaleString('zh-CN'):value;tr.append(td);}
       adminEl('analytics-rows').append(tr);
     }
     status.textContent=`近30天共 ${total.toLocaleString('zh-CN')} 次页面访问。${rows.length?'':'接入后开始统计。'}`;

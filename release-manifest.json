@@ -1,12 +1,12 @@
 {
-  "version": "0.2.0",
+  "version": "0.2.1",
   "files": {
     ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "admin.html": "e27b17e72909623af0766912891f10e0d0a2cb215d2433c581496a68a5785d0b",
-    "assembler.html": "934950ee5e18ef10ce7c1835917bf539b71636e1a5aec42dee77f0fcc070a30b",
+    "admin.html": "c6b6ebd717b90d2ba3dc8c5c64d1453ebed2f519f10eafb505e2a899ce72db87",
+    "assembler.html": "eb3190e3a92dc922377a8cf3e058fc5953454110be5caceee0cd1c555b77e38f",
     "assets/EVIDENCE_REMOVAL.png": "693cefd0b7d48687be76155ade0070b0c420e4a999b1232c4644ecad94da56c3",
     "assets/WILD_FIXER.png": "6a5fb03e3993e776bea24d0fd1bbae169b9cf9ef10871fb9728e6c37a60e7519",
-    "assets/analytics.js": "8146ecd0d90c899b888f558d8d97ce92191e861430d84c602721169729953204",
+    "assets/analytics.js": "6ab22ef8d1acd4fc43c3cd31fbcbf46942fc3494073d2966b88cb4b1088b0dbc",
     "assets/app.js": "8ab4b8d5ae845b01def2865e73de3ce5a602a28cc0c88f7214435ce01cfba355",
     "assets/assembler-items/items_module/chem_module.png": "30a5faf4033e50a90a2878943dfcf4cc66c8feff3fe92c17dc8c7e7a30e9e845",
     "assets/assembler-items/items_module/farm_module_l1.png": "b17fda69365fc85c228b596e5bf03e92490b566249da3d575baf47e24798e616",
@@ -78,7 +78,7 @@
     "assets/cat-mark.png": "51acad807fc18b5162476f9ff93b8bc2f2eea3d2934d53bcc19ed96399d834fb",
     "assets/crime-model.js": "5f9641f72838e2fcce9a9bd71f38a7cedbcc128b1a0101e8dbf3ca7fc0adda25",
     "assets/favicon.svg": "7393005cfda093c5769bafdd4d662ca109e726ce7133d39ce724b2c2e0e2a4d3",
-    "assets/feedback-admin.js": "80b4b29d3054d8e281626df2433d6b9393eea21b900d964b1f690621ce7ae9ba",
+    "assets/feedback-admin.js": "05351a716b586861c842cfeebddffb5f82230dbab7a5543a2ea1466673aa3c56",
     "assets/feedback-common.js": "69eef6d03ef9adbcc268d89c5fef2af07749123a012505447543e51859d6c118",
     "assets/feedback-config.js": "24d061eff95d6783d7dbfcdc6b554bb7099f87087962482c938843ee2f9f6557",
     "assets/feedback-pages.css": "5c7ea685ca9785284ecb4a2f8301a1872740358b432c7b9a0f2b775475568342",
@@ -149,8 +149,8 @@
     "assets/style.css": "6110e255fbce76e2af0a07ed1ebe3f024a8a35489950b4d8ee53a5ed42d34c31",
     "assets/theme.js": "a59a7e41e494789bc42bf29d39f997014d2b86940f05978cd4b28711fba6fe08",
     "assets/tool-session.js": "40d52bf3d1fedad70f80533ea813f356e037189be9cd1235f33da5d473d961ce",
-    "feedback.html": "e49cc6cc169ca942fac79aaf6c00cf6192e921769eccbedf44d4bb0568fc0443",
-    "index.html": "382e0d458ba35b0bdc5a1371993463d971f5ba9fba266e73030b1b4d8df355c6",
-    "version.json": "55a3bf50ebbba3a9c3cc1c1b6c8066d38c1e0381e3e363f03aeaa5c5c56ffff2"
+    "feedback.html": "768e0ce4b7dffe65383758522e2b355d1fd634771fc105b8e7d07bfc2c27d786",
+    "index.html": "c75dc6d56b4842c7a9483aff85871e94949b9b7a1058344648c6aa5f2e382d9e",
+    "version.json": "24b500ce515b4b197962ca4940c3f7d06277c99e416490dcd2b539e711a8ac14"
   }
 }

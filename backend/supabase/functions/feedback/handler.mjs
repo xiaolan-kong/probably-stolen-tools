@@ -69,7 +69,7 @@ export function createHandler(config,fetcher=fetch) {
       const pathname=new URL(request.url).pathname.replace(/^.*\/feedback(?=\/|$)/,'').replace(/\/$/,'')||'/';
       if(pathname==='/page-view'&&request.method==='POST'){
         const body=await jsonBody(request);
-        if(!body||Object.keys(body).length!==1||!['calculator','feedback'].includes(body.page))fail(400,'页面类型无效。');
+        if(!body||Object.keys(body).length!==1||!['calculator','assembler','feedback'].includes(body.page))fail(400,'页面类型无效。');
         await api('/rest/v1/rpc/record_page_view',{method:'POST',body:{p_page:body.page}});
         return respond({ok:true});
       }
@@ -110,7 +110,7 @@ export function createHandler(config,fetcher=fetch) {
         await admin(request);
         if(pathname==='/admin/analytics'&&request.method==='GET'){
           const since=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(Date.now()-29*86400000));
-          return respond(await api(`/rest/v1/page_views_daily?day=gte.${since}&select=day,page,views&order=day.desc,page.asc&limit=60`));
+          return respond(await api(`/rest/v1/page_views_daily?day=gte.${since}&select=day,page,views&order=day.desc,page.asc&limit=90`));
         }
         if(pathname==='/admin/tickets'&&request.method==='GET'){
           const page=Number(new URL(request.url).searchParams.get('page')||'0');if(!Number.isInteger(page)||page<0||page>10000)fail(400,'页码无效。');
