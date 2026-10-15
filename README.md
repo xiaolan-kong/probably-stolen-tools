@@ -1,12 +1,12 @@
 # 深空当铺工具站
 
-试用版 `v0.2.1`，适用游戏 `Demo 049-Rev5-L`。犯罪金额计算器、服务方案比较、逐日安排、准确声望、分类罪行与当天追加额度。无需安装依赖或登录；计算在浏览器完成，主题偏好保存在本机。
+试用版 `v0.3.0`，适用游戏 `Demo 049-Rev5-L`。犯罪金额计算器、服务方案比较、逐日安排、准确声望、分类罪行与当天追加额度。无需安装依赖或登录；计算在浏览器完成，主题偏好保存在本机。
 
 文字＋图片反馈已接通 Supabase，玩家免登录提交，用私有查询链接查看处理结果；管理员在 `admin.html` 登录、查看、回复。模块组装器支持真实存档、单机与联合装配、共享锁定、按步骤装配指导和实时最佳方案。
 
 ## 发布到 GitHub Pages
 
-正式站点：https://xiaolan-kong.github.io/probably-stolen-tools/ 。仓库 `xiaolan-kong/probably-stolen-tools`，发布分支 `main`；本包为 v0.2.1 更新候选。以 GitHub Actions 成功与公开资源核验为上线依据。
+正式站点：https://xiaolan-kong.github.io/probably-stolen-tools/ 。仓库 `xiaolan-kong/probably-stolen-tools`，发布分支 `main`；本包为 v0.3.0 更新候选。以 GitHub Actions 成功与公开资源核验为上线依据。
 
 1. 确认公开发布后，将本文件夹内容上传到目标 GitHub 仓库；不要上传整个素材文件夹、本机研究证据、截图、存档或游戏程序。
 2. 仓库 **Settings → Pages → Source** 选择 **GitHub Actions**。
@@ -35,6 +35,7 @@ node tests/assembler-sprites.test.cjs
 node tests/assembler-local-pieces.test.cjs
 node tests/assembler-retention.test.cjs
 node tests/tool-session.test.cjs
+node tests/guides.test.cjs
 node tests/release.test.cjs
 ```
 
@@ -68,9 +69,11 @@ node tests/release.test.cjs
 
 部署后台时先执行 `202610140002_page_views.sql`，再执行 `202610150001_assembler_page_views.sql` 并更新现有 `feedback` 函数，最后发布前端。新增迁移保留原有计数，后台单独显示模块组装器并计入合计。计数表和函数仅服务端可读写，管理员查询沿用现有身份校验；并发计数由数据库原子累加。平台自身访问日志依其政策处理。
 
-## 后续方向
+## 攻略板块
 
-本版包含计算器和模块组装器；后续参考 [Probably Stolen Wiki](https://probably-stolen.nicokobo.com/zh) 的攻略组织方式，将现有攻略集中到工具站。本版未迁移或复制对方内容。
+攻略目录为 `guides.html`，水商回头客文章为 `guide-return-customers.html`。正文同步自作者的小黑盒已发表文章（193981053），评论区四张方案图并入第九节；十二张配图均使用本地原图，不依赖外站图床。保留九节正文与作者图注，仅将“看评论区”改为本站方案锚点。目录、原图查看／保存、深浅主题适配桌面与手机。参考 Probably Stolen Wiki 的攻略组织方式，未复制对方内容。
+
+这是本次内容同步，不会自动抓取后续小黑盒修改。攻略页未接入现有三类工具 PV 统计，未修改 Supabase。
 
 游戏名称、服务名称、机器和模组图片来自 Probably Stolen，相关权利归原权利人；本站为非官方玩家工具。此仓库不包含游戏程序、反汇编或玩家存档，未给游戏素材附加开源授权。
 

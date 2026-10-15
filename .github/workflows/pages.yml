@@ -33,6 +33,7 @@ jobs:
           node tests/assembler-local-pieces.test.cjs
           node tests/assembler-retention.test.cjs
           node tests/tool-session.test.cjs
+          node tests/guides.test.cjs
           node tests/release.test.cjs
       - name: Check feedback allows this Pages origin
         env:
