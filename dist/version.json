@@ -1,10 +1,11 @@
 {
-  "version": "0.3.0",
+  "version": "0.3.1",
   "rules": "Demo 049-Rev5-L",
   "checkedDate": "2026-10-16",
   "feedback": "connected",
   "assembler": "single-and-joint",
   "guides": [
-    "return-customers"
+    "return-customers",
+    "water-recipes"
   ]
 }

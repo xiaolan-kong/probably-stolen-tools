@@ -1,12 +1,12 @@
 # 深空当铺工具站
 
-试用版 `v0.3.0`，适用游戏 `Demo 049-Rev5-L`。犯罪金额计算器、服务方案比较、逐日安排、准确声望、分类罪行与当天追加额度。无需安装依赖或登录；计算在浏览器完成，主题偏好保存在本机。
+试用版 `v0.3.1`，适用游戏 `Demo 049-Rev5-L`。犯罪金额计算器、服务方案比较、逐日安排、准确声望、分类罪行与当天追加额度。无需安装依赖或登录；计算在浏览器完成，主题偏好保存在本机。
 
 文字＋图片反馈已接通 Supabase，玩家免登录提交，用私有查询链接查看处理结果；管理员在 `admin.html` 登录、查看、回复。模块组装器支持真实存档、单机与联合装配、共享锁定、按步骤装配指导和实时最佳方案。
 
 ## 发布到 GitHub Pages
 
-正式站点：https://xiaolan-kong.github.io/probably-stolen-tools/ 。仓库 `xiaolan-kong/probably-stolen-tools`，发布分支 `main`；本包为 v0.3.0 更新候选。以 GitHub Actions 成功与公开资源核验为上线依据。
+正式站点：https://xiaolan-kong.github.io/probably-stolen-tools/ 。仓库 `xiaolan-kong/probably-stolen-tools`，发布分支 `main`；本包为 v0.3.1 更新候选。以 GitHub Actions 成功与公开资源核验为上线依据。
 
 1. 确认公开发布后，将本文件夹内容上传到目标 GitHub 仓库；不要上传整个素材文件夹、本机研究证据、截图、存档或游戏程序。
 2. 仓库 **Settings → Pages → Source** 选择 **GitHub Actions**。
@@ -71,7 +71,7 @@ node tests/release.test.cjs
 
 ## 攻略板块
 
-攻略目录为 `guides.html`，水商回头客文章为 `guide-return-customers.html`。正文同步自作者的小黑盒已发表文章（193981053），评论区四张方案图并入第九节；十二张配图均使用本地原图，不依赖外站图床。保留九节正文与作者图注，仅将“看评论区”改为本站方案锚点。目录、原图查看／保存、深浅主题适配桌面与手机。参考 Probably Stolen Wiki 的攻略组织方式，未复制对方内容。
+攻略目录 `guides.html` 按阅读目的分为“技术文章”和“几图流”。`guide-return-customers.html` 保留八节机制解释，四张表格图转为HTML表格，示意图最大440px、检测截图220px并排。`guide-water-recipes.html` 独立提供四套配方、底水要求和原图查看／保存；两页互相链接。保留旧文章地址和方案锚点，已分享链接仍可到达对应入口。正文沿用作者小黑盒发表版（193981053），配图保留本地原图。
 
 这是本次内容同步，不会自动抓取后续小黑盒修改。攻略页未接入现有三类工具 PV 统计，未修改 Supabase。
 

@@ -1,9 +1,9 @@
 {
-  "version": "0.3.0",
+  "version": "0.3.1",
   "files": {
     ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "admin.html": "e150e95b4d89760784bbea2b22eac09e40705d6940f912a4f6eed3a98f54625a",
-    "assembler.html": "82901e89f23191b6f4621e778adcba6cb4f975cfd0dc07b82b404ee4e295a5f7",
+    "admin.html": "18eed2103bcccf28e821fe0488ebbef3e9773de3869467280bdae33f52abbfed",
+    "assembler.html": "839b26fb7e48af00075c9ff688f29739faf919fa86db24acd044c64bd0eeec77",
     "assets/EVIDENCE_REMOVAL.png": "693cefd0b7d48687be76155ade0070b0c420e4a999b1232c4644ecad94da56c3",
     "assets/WILD_FIXER.png": "6a5fb03e3993e776bea24d0fd1bbae169b9cf9ef10871fb9728e6c37a60e7519",
     "assets/analytics.js": "6ab22ef8d1acd4fc43c3cd31fbcbf46942fc3494073d2966b88cb4b1088b0dbc",
@@ -84,7 +84,7 @@
     "assets/feedback-pages.css": "5c7ea685ca9785284ecb4a2f8301a1872740358b432c7b9a0f2b775475568342",
     "assets/feedback-receipt.js": "ebfdaef3a356e5bbdd1c93cbf3815fcb3019816ee2f8ead241235a658def9108",
     "assets/feedback.js": "2fb4f2df4690de3a7d2fb3582645ceca36a51f9d81956f7b812b1ed1ab483817",
-    "assets/guides.css": "9f8b06002c373a636b0821c422f16336ee3c1f0fc2d0abf91c3b2a812fc4fd02",
+    "assets/guides.css": "28e68bee5e7da092ddd5dfde53dd5fbd9b945f5fd45e5d129370bc7e4cbb470f",
     "assets/guides.js": "c1594e963e60f1f0a424efccd6ebbc4e7c80a9af22b60246697ef79388519be9",
     "assets/guides/return-customers/01.png": "50a0d9fa78e7654f220840b8de52fcf2ffb033e98882e355508b3819436f5061",
     "assets/guides/return-customers/02.png": "ef91caed9ad4743ce3cac64de12e3e42bff2974497d918276487d7e55e967480",
@@ -98,6 +98,8 @@
     "assets/guides/return-customers/10.png": "2a8ee8eaf365638d2d1b6cb486afc8e2f383aaec991777078a46ff8b11cbd4fc",
     "assets/guides/return-customers/11.png": "7fb4e5c02107e74f67cdbf46da444edae9e43c7e5eed43a0d97575cb5c786a40",
     "assets/guides/return-customers/12.png": "50aebf38bc3f887dec1ee3aa5e2c251edf0b6690eb6e0bba5f7cb4e7f57d3517",
+    "assets/guides/return-customers/dream_dust.png": "044ef3a4637963740574e25505332355a7fea0a7c7b4ddba3dd680442b966873",
+    "assets/guides/return-customers/oxycodone_pill.png": "85d78691ccbd681f85ac72e777c8ea38f47818de9d22ff2b1eeedf3f494497b3",
     "assets/pixel-theme.css": "326f57f98fb023e8815d57b291eb778fa3dd737362936da5e0be0fd1c8b7162b",
     "assets/planner/LICENSE.TXT": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
     "assets/planner/THIRD-PARTY-NOTICES.TXT": "66f1d4e44973185519bb4aa8a9718eb22fc7af2cc532e3ae9cfc4c127ee7fc54",
@@ -163,10 +165,11 @@
     "assets/style.css": "6110e255fbce76e2af0a07ed1ebe3f024a8a35489950b4d8ee53a5ed42d34c31",
     "assets/theme.js": "a59a7e41e494789bc42bf29d39f997014d2b86940f05978cd4b28711fba6fe08",
     "assets/tool-session.js": "40d52bf3d1fedad70f80533ea813f356e037189be9cd1235f33da5d473d961ce",
-    "feedback.html": "964ca4e1bed73d01871790036133b5929dccf69f7b77f306a01c15ad42d30aae",
-    "guide-return-customers.html": "e63d1c7ae14a6dafef32c76df3017a8bc3a25cc23f24a08b544e095ba9b301c7",
-    "guides.html": "badb521d7d869de3727a7e1a25279bc2ace97eeffc2303fb0059d27f2663849c",
-    "index.html": "fc44a83024565809f8bd52cbe88c5239bb2fbca48611740290f02615711e0c91",
-    "version.json": "c1167646bbcbc54a19f001fbc72490da54b75fb3d529057c25b45ea4b00ee3f0"
+    "feedback.html": "5cc14f73a6ef735e6fee934015308ce921396252b7a21701b4bebb5613f8f9fe",
+    "guide-return-customers.html": "0c08aaedac6ea37b4848a1248d2695af4b367586a65e9a4eff3cdea8fb7d33ac",
+    "guide-water-recipes.html": "bb643a92a8070c3250c4dcfd6a694324ac53103133561f2ed4c209b0bb5e2b8c",
+    "guides.html": "bf11f1b4c9c7475a4c2ba0cda33e158f3833c1848fd3374f6b1685ccc3157559",
+    "index.html": "8ce8121cf084d4ca87ca678586730b5da2dc1059904d813b549fbe5879d7adde",
+    "version.json": "61d211c480e2fd25bf88147bc685d4e5481db5946fc04ec84f73ef8e0cd2b0a6"
   }
 }
