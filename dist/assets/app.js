@@ -5,7 +5,8 @@ function selectedRange(id) {
   return $(id).dataset.reputation === 'range' && $(id).value !== '' ? $(id).selectedOptions[0].textContent.trim().replace(/\s+/g, ' ') : null;
 }
 const fmt = n => n.toLocaleString('zh-CN');
-const serviceName = p => [p.fixer && '王尔德的善后人', p.evidence && '清除证据'].filter(Boolean).join(' + ') || '不使用服务';
+const fixerName = level => `王尔德的善后人（${Crime.fixerTiers[level ?? 1].label}）`;
+const serviceName = p => [p.fixer && fixerName(p.fixerTier), p.evidence && '清除证据'].filter(Boolean).join(' + ') || '不使用服务';
 const dayName = day => day === 1 ? '第 1 天（当天）' : `第 ${day} 天`;
 const finishDay = p => p.days + 1;
 let input, plans = [], best = -1, generated = null;
@@ -35,7 +36,7 @@ function draft() {
   return {amounts: $('amount').value, split: $('split').checked, crimes: $('split').checked ? crimeRows('crime-rows') : [],
     sales: $('sales').checked, proposed: $('sales').checked ? crimeRows('sale-rows') : [],
     rep: $('rep').value, progress: $('progress').value, upper: $('upper').value, upperRange: selectedRange('upper'),
-    fixer: $('fixer').checked, availability: $('availability').value,
+    fixer: $('fixer').checked, fixerTier: number('fixer-tier'), availability: $('availability').value,
     cooldown: $('availability').value === 'cooldown' ? $('cooldown').value : '', officer: $('officer').value};
 }
 function isStale() {return generated !== null && JSON.stringify(draft()) !== generated.key;}
@@ -45,7 +46,7 @@ function describeDraft(d) {
     d.sales ? `当天预计新增：${describeRows(d.proposed)}；按今天已正式入账试算` : '未启用追加犯罪金额测算',
     `调查进度：${d.progress}`, `治安部声望：${d.rep}`, `上层区声望：${d.upperRange || d.upper}`,
     '罚款按能付清计算，需自行留足方案所示金额',
-    `王尔德的善后人：${d.fixer ? '可用' : '不可用'}`,
+    `${fixerName(d.fixerTier)}：${d.fixer ? '可用' : '不可用'}`,
     `清除证据：${{ready:'现在可用',cooldown:`冷却中，剩余 ${d.cooldown} 天`,unavailable:'不可使用 / 未解锁'}[d.availability]}`,
     `警官情况：${{auto:'未派来（调查满 100 按已派来处理）',queued:'已派来，尚未开始复核',dialogue:'已进入处罚对话'}[d.officer]}`,
     '计算范围：当前报告，不计后续新增或延迟入账'].join('\n');
@@ -64,7 +65,7 @@ function read() {
   const rep = number('rep');
   let records = $('split').checked ? Crime.mergeCrimes(numericRows(crimeRows('crime-rows'))) : null;
   if ($('sales').checked) records = Crime.mergeCrimes([...records, ...Crime.mergeCrimes(numericRows(crimeRows('sale-rows')))]);
-  return {records, amounts: records ? records.map(x => x.amount) : [number('amount')], rep, cash: 299, progress: number('progress'), upper: number('upper'), cooldown: $('availability').value === 'cooldown' ? number('cooldown') : 0, officer: $('officer').value};
+  return {records, amounts: records ? records.map(x => x.amount) : [number('amount')], fixerTier: number('fixer-tier'), rep, cash: 299, progress: number('progress'), upper: number('upper'), cooldown: $('availability').value === 'cooldown' ? number('cooldown') : 0, officer: $('officer').value};
 }
 function note(p) {
   return ({none:'未找到可继续经营的安排', limit:'搜索超限，暂不能判断', dialogue:'处罚对话已生成', reputation:'声望 ≤ −100'})[p.status] || `第 ${finishDay(p)} 天${p.fineTotal ? `结案 · 罚款 ${fmt(p.fineTotal)} ¢` : '清零'} · ${p.loss ? '声望 −' + p.loss : '声望不变'}`;
@@ -80,7 +81,7 @@ function timeline(p) {
     if (r.resetAt !== null) actions.push('<strong><img src="assets/EVIDENCE_REMOVAL.png" alt="">清除证据</strong>');
     if (r.fine) actions.push(`<strong>缴纳罚款 ${fmt(r.fine)} ¢</strong><br><span class="secondary">结案后金额与调查归零</span><span class="loss">声望 −${r.loss}</span>`);
     else if (r.loss) actions.push(`接待警官 <span class="loss">（声望 −${r.loss}）</span>`);
-    if (!r.eventOnly && !r.skipFixer) actions.push(p.fixer ? '<img src="assets/WILD_FIXER.png" alt="">王尔德的善后人' : '<span class="secondary">不使用服务</span>');
+    if (!r.eventOnly && !r.skipFixer) actions.push(p.fixer ? `<img src="assets/WILD_FIXER.png" alt="">${fixerName(p.fixerTier)}` : '<span class="secondary">不使用服务</span>');
     rows.push(rowHtml(r.eventOnly ? r.day + 1 : r.day, actions, r.loss || r.resetAt !== null, !!r.fine && r.eventOnly, r.rep));
     amount = r.total; progress = r.progress; rep = r.rep;
   }
@@ -107,13 +108,13 @@ function selectPlan(index) {
   $('result-tag').textContent = index === best ? '推荐方案' : '当前查看';
   $('result-title').textContent = p.fineTotal ? '可以继续经营，需缴纳罚款' : Crime.sum(input.amounts) === 0 ? '当前金额已清零' : '当前金额可以清零';
   const services = [];
-  if (p.fixer) services.push('<span class="service-chip"><img src="assets/WILD_FIXER.png" alt="">王尔德的善后人</span>');
+  if (p.fixer) services.push(`<span class="service-chip"><img src="assets/WILD_FIXER.png" alt="">${fixerName(p.fixerTier)}</span>`);
   if (p.evidence) services.push('<span class="service-chip"><img src="assets/EVIDENCE_REMOVAL.png" alt="">清除证据</span>');
   $('result-sub').innerHTML = '<span class="service-caption">所需服务</span>' + (services.join('') || '<span class="service-chip">不需要服务</span>');
   const first = p.resets[0], when = first ? `第 ${first.resetAt + 1} 天` : '不需要';
   $('metrics').innerHTML = `<div class="metric"><small>${p.fineTotal ? '预计结案' : '预计清零'}</small><b>第 ${finishDay(p)} 天</b></div><div class="metric"><small>${p.fineTotal ? '罚款合计' : '首次清除证据'}</small><b>${p.fineTotal ? fmt(p.fineTotal) + ' ¢' : when}</b></div><div class="metric"><small>最终声望 · 治安部</small><b>${fmt(input.rep - p.loss)}<em>${p.loss ? '−' + p.loss : '不变'}</em></b></div>`;
   const actions = [];
-  if (p.fixer) actions.push('<strong>按下方逐日安排</strong>使用「王尔德的善后人」，结案后停止。');
+  if (p.fixer) actions.push(`<strong>按下方逐日安排</strong>使用「${fixerName(p.fixerTier)}」，结案后停止。基础夜费 ${Crime.fixerTiers[p.fixerTier].fee} ¢，实际费用以游戏为准。`);
   for (const r of p.resets) actions.push(`<strong>${dayName(r.resetAt + 1)}</strong>，调查进度 ${r.before} 时使用「清除证据」${r.before >= 100 || (r.resetAt === 0 && input.officer === 'queued') ? '，必须在警官复核前完成' : '，当天完成'}。`);
   for (const r of p.fines) actions.push(`<strong>${dayName(r.eventOnly ? r.day + 1 : r.day)}</strong>，接待警官并缴纳 <strong>${fmt(r.fine)} ¢</strong> 罚款（声望 −${r.loss}），清掉本案。`);
   if (p.fineTotal) actions.push(`请留足 <strong>${fmt(p.fineTotal)} ¢</strong> 罚款；付不起仍可能被拘捕，服务费用另计。`);
@@ -156,7 +157,7 @@ function renderSales() {
 }
 function renderCaps() {
   $('amount-caps').hidden = false;
-  $('caps-context').textContent = `治安部声望 ${input.rep} · 上层区${generated.draft.upperRange} · 调查进度 ${input.progress}。沿用本次警官情况及清除证据冷却。`;
+  $('caps-context').textContent = `治安部声望 ${input.rep} · 上层区${generated.draft.upperRange} · 调查进度 ${input.progress}。善后按${Crime.fixerTiers[input.fixerTier].label}；沿用本次警官情况及清除证据冷却。`;
   const cells = [[false,false],[true,false],[true,true]].map(([fixer,evidence]) => {
     if ((fixer && !generated.draft.fixer) || (evidence && generated.draft.availability === 'unavailable')) return '<td>服务不可用</td>';
     const cap = Crime.maxAmount(input,fixer,evidence);

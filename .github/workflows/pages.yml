@@ -21,6 +21,8 @@ jobs:
       - name: Check rules and release files
         run: |
           node tests/model.test.cjs
+          node tests/fixer-tiers.test.cjs
+          node tests/assembler-formal.test.cjs
           node tests/ranges.test.cjs
           node tests/theme.test.cjs
           node tests/additions.test.cjs

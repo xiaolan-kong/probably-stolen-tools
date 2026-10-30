@@ -15,7 +15,7 @@
   function changed(){pending=null;$('feedback-status').replaceChildren();}
   function context() {
     if(window.assemblerFeedbackContext)return window.assemblerFeedbackContext();
-    return ['深空当铺工具站 · 适用游戏 Demo 049-Rev5-L', '当前填写（未必已生成）：', describeDraft(draft()),
+    return ['深空当铺工具站 · 犯罪规则：正式版 VERSION 100 / Build 26284217', '当前填写（未必已生成）：', describeDraft(draft()),
       generated ? `方案状态：${isStale() ? '已过期，输入已修改' : '与输入一致'}\n生成方案时的输入：\n${describeDraft(generated.draft)}\n当前查看：${$('result-title').textContent}\n${$('actions').innerText}` : '方案状态：尚未生成'
     ].join('\n');
   }

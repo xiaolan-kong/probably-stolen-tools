@@ -1,9 +1,14 @@
-/* Rules: Demo 049-Rev5-L; see README for evidence and exclusions. */
+/* Rules: formal Build 26284217 / VERSION 100; static evidence, not game validation. */
 (function (root) {
   'use strict';
   const sum = xs => xs.reduce((a, b) => a + b, 0);
   const even = x => x % 1 === .5 ? Math.floor(x) + Math.floor(x) % 2 : Math.round(x);
-  const clean = a => Math.max(0, a - Math.trunc(Math.fround(Math.fround(a) * Math.fround(.15))) - 50);
+  const fixerTiers = [null, {label:'一级', rate:.15, flat:50, fee:25}, {label:'二级', rate:.20, flat:150, fee:45}, {label:'三级', rate:.25, flat:400, fee:70}];
+  function clean(a, level = 1) {
+    const tier = fixerTiers[level];
+    if (!tier) throw Error('善后等级请选一级、二级或三级。');
+    return Math.max(0, a - Math.trunc(Math.fround(Math.fround(a) * Math.fround(tier.rate))) - tier.flat);
+  }
   function rate(a, r, u) {
     let n = a < 100 ? 0 : a < 300 ? 2 : a < 850 ? 6 : a < 1200 ? 9 : a < 1500 ? 12 : a < 2500 ? 20 : 33;
     if (r >= 60) n = Math.floor(n / 2);
@@ -44,6 +49,7 @@
   }
   const punishment = amount => amount < 100 ? '报告不显示刑罚' : amount < 300 ? '罚款' : amount < 1500 ? '监禁（结束本局）' : '处决（结束本局）';
   function validate(i) {
+    if (i.fixerTier !== undefined && (!Number.isInteger(i.fixerTier) || !fixerTiers[i.fixerTier])) throw Error('善后等级请选一级、二级或三级。');
     if (!Array.isArray(i.amounts) || !i.amounts.length || i.amounts.length > 11 || i.amounts.some(a => !Number.isInteger(a) || a < 0 || a > 10000000)) throw Error('金额请填 0～10,000,000 的整数；最多 11 条不同罪名。');
     if (!Number.isInteger(i.progress) || i.progress < 0 || i.progress > 100) throw Error('调查进度请填 0～100 的整数。');
     if (![i.rep, i.upper].every(Number.isFinite)) throw Error('请填写两项声望，可填小数。');
@@ -91,7 +97,7 @@
         for (const reset of mustReset ? [true] : [false, true]) {
           if (reset && (!evidence || c > 0 || p === 0)) continue;
           const before = reset ? 0 : p;
-          let next = fixer ? amounts.map(clean) : [...amounts];
+          let next = fixer ? amounts.map(a => clean(a, i.fixerTier ?? 1)) : [...amounts];
           if (before < 80) next = next.map(a => Math.max(0, a - 20));
           const na = sum(next), delta = rate(na, nr, i.upper), np = Math.min(100, before + delta), nc = Math.max(0, (reset ? 14 : c) - 1);
           if (day >= lastAddition && na === total && np === p && nr === r && nc === c) continue;
@@ -120,7 +126,7 @@
     const rep = i.rep - (pending ? (i.upper <= -60 ? 40 : 20) : 0);
     if (rep <= -100) return {blocked: '治安声望将降至 −100 或更低'};
     const source = i.additions?.length ? [sum(i.amounts)] : i.amounts;
-    let amounts = fixer ? source.map(clean) : [...source];
+    let amounts = fixer ? source.map(a => clean(a, i.fixerTier ?? 1)) : [...source];
     const before = reset ? 0 : i.progress;
     if (before < 80) amounts = amounts.map(a => Math.max(0, a - 20));
     const total = sum(amounts), delta = rate(total, rep, i.upper);
@@ -134,7 +140,7 @@
       const result = solve(i, fixer, evidence);
       const usedFixer = success(result) ? fixer && result.rows.some(r => !r.eventOnly && !r.skipFixer) : fixer;
       const usedEvidence = success(result) ? result.resets.length > 0 : evidence;
-      const option = {...result, fixer: usedFixer, evidence: usedEvidence};
+      const option = {...result, fixer: usedFixer, fixerTier: i.fixerTier ?? 1, evidence: usedEvidence};
       // A service being allowed does not mean the returned plan uses it.
       if (success(result) && options.some(p => success(p) && p.fixer === usedFixer && p.evidence === usedEvidence && p.status === result.status && p.fineTotal === result.fineTotal && p.loss === result.loss)) continue;
       options.push(option);
@@ -176,7 +182,7 @@
     }
     return {...evaluate(low), amount: low, atLeast: low === 10000000 - amounts[index]};
   }
-  const api = {sum, clean, rate, tier, validate, solve, tomorrow, planOptions, success, maxAmount, crimes, mergeCrimes, inspection, punishment, maxAdditional};
+  const api = {sum, clean, fixerTiers, rate, tier, validate, solve, tomorrow, planOptions, success, maxAmount, crimes, mergeCrimes, inspection, punishment, maxAdditional};
   if (typeof module !== 'undefined') module.exports = api;
   else root.Crime = api;
 })(typeof globalThis === 'undefined' ? this : globalThis);

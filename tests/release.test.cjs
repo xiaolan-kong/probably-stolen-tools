@@ -26,7 +26,10 @@ for (const page of actual.filter(f=>f.endsWith('.html'))) {
  }
 }
 assert(html.includes('name="description"'));
-assert(html.includes('Demo 049-Rev5-L'));
+assert(html.includes('正式版 VERSION 100 · Build 26284217'));
+assert(html.includes('id="fixer-tier"'));
+assert(fs.readFileSync(path.join(dist,'assembler.html'),'utf8').includes('支持正式版 VERSION 100 的12类机器'));
+assert(fs.readFileSync(path.join(dist,'guides.html'),'utf8').includes('正式版更正')); 
 assert(html.includes('id="feedback-form"'));
 assert(html.includes('仅在提交时发送') || fs.readFileSync(path.join(dist,'assets/feedback.js'),'utf8').includes('仅在提交时发送'));
 assert(!/本地 Demo|本地预览|尚未发布|已记入 Notion/.test(html));

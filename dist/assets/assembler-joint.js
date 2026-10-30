@@ -3,7 +3,9 @@
   'use strict';
   const A=typeof module==='object'?require('./assembler-model.js'):root.Assembler;
   const goalFor=(m,options)=>options.targets?.[m.identifier]||{primary:A.profiles[m.identifier].primary};
-  const raw=(m,e,g)=>g.primary==='power'?-e.power:g.primary==='outcome'?(m.identifier==='water_purifier'?-e.output:e.output):e[g.primary];
+  const raw=(m,e,g)=>A.metric(m,e,g.primary);
+  const even=n=>n%1===.5?Math.floor(n)+Math.floor(n)%2:Math.round(n);
+  const sharedOutput=(ml,count)=>even(Math.fround(Math.fround(ml*1000)/Math.fround(1+Math.fround(.25*(count-1)))))/1000;
   const searchBudget=mode=>({seconds:mode==='deep'?300:mode==='quick'?5:60,exhaustive:false});
   function searchContextKey(mode,machines,options) {
     const goals=[...new Set(machines.map(m=>m.identifier))].sort().map(id=>{
@@ -15,12 +17,15 @@
   }
   function jointSummary(machines,candidate,options={}) {
     const water=Array(6).fill(0);let power=0,reached=0;
-    for(const m of machines){const e=candidate.machines[m.key].evaluation,g=goalFor(m,options);power+=e.power;if(m.identifier==='moisture_farm')water[e.tier]+=e.output;if(g.preferred==null||raw(m,e,g)>=g.preferred)reached++;}
-    return {water,power,reached,count:machines.length};
+    const stopped=new Set(candidate.stoppedFarms||[]),farms=machines.filter(m=>m.identifier==='moisture_farm'&&!stopped.has(m.key)),sharing=farms.some(m=>m.formal);
+    for(const m of machines){if(stopped.has(m.key))continue;const e=candidate.machines[m.key].evaluation,g=goalFor(m,options);power+=e.power;if(m.identifier==='moisture_farm')water[e.tier]+=sharing?sharedOutput(e.output,farms.length):e.output;if(g.preferred==null||raw(m,e,g)>=g.preferred)reached++;}
+    return {water,power,reached,count:machines.length,runningFarms:farms.length,stoppedFarms:[...stopped],airFactor:sharing&&farms.length?1/(1+.25*(farms.length-1)):1};
   }
   function validateJoint(snapshot,machines,options,candidate) {
     if(Object.keys(candidate.machines).length!==machines.length)throw Error('联合方案的机器数量不匹配。');
-    const used=new Set(),clean={machines:{}};
+    const stopped=candidate.stoppedFarms||[];
+    if(!Array.isArray(stopped)||new Set(stopped).size!==stopped.length||stopped.some(k=>!machines.some(m=>m.key===k&&m.formal&&m.identifier==='moisture_farm')))throw Error('运行建议包含未知或不适用的机器。');
+    const used=new Set(),clean={machines:{},stoppedFarms:[...stopped]};
     for(const m of machines){
       if(m.error||options.locks?.includes(m.key))throw Error(m.error||'联合选择中含锁定机器。');
       const p=candidate.machines[m.key];if(!p)throw Error('联合方案缺少机器。');
@@ -87,6 +92,6 @@
     }
     next.hasConfirmedAssembly=true;return next;
   }
-  Object.assign(A,{jointSummary,validateJoint,preferLocalPieces,assemblyActions,completeAssembly,searchBudget,searchContextKey});
+  Object.assign(A,{sharedOutput,jointSummary,validateJoint,preferLocalPieces,assemblyActions,completeAssembly,searchBudget,searchContextKey});
   if(typeof module==='object')module.exports=A;
 })(typeof self==='object'?self:globalThis);

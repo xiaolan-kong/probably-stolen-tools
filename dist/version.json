@@ -1,9 +1,9 @@
 {
-  "version": "0.3.1",
-  "rules": "Demo 049-Rev5-L",
-  "checkedDate": "2026-10-16",
+  "version": "0.4.0",
+  "rules": "VERSION 100 / Build 26284217",
+  "checkedDate": "2026-10-30",
   "feedback": "connected",
-  "assembler": "single-and-joint",
+  "assembler": "formal-12-machines-and-legacy-demo",
   "guides": [
     "return-customers",
     "water-recipes"

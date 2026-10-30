@@ -50,9 +50,9 @@
     }
     updateSteps();
   }
-  function defaults(id){const primary=['mirage_projector','security_alarm','desequencer'].includes(id)?'outcome':A.profiles[id].primary;return {primary,secondary:primary==='outcome'?'power':'performance',preferred:A.targetPresets(snapshot,id,primary).at(-1)?.[0]??null,minQuality:null,minPerformance:null,maxPower:null,requirements:[]};}
+  function defaults(id){const primary=(['mirage_projector','security_alarm','desequencer'].includes(id)||snapshot.formal&&id==='water_purifier')?'outcome':A.profiles[id].primary;return {primary,secondary:primary==='outcome'?'power':'performance',preferred:A.targetPresets(snapshot,id,primary).at(-1)?.[0]??null,minQuality:null,minPerformance:null,maxPower:null,requirements:[]};}
   function selectField(title,choices,value,change){const label=el('label',title),input=el('select');input.setAttribute('aria-label',title);for(const [v,t]of choices){const o=el('option',t);o.value=v;input.append(o);}input.value=value;input.onchange=()=>change(input.value);label.append(input);return label;}
-  function numberField(title,value,min,change,max=100000){const label=el('label',title),input=el('input');Object.assign(input,{type:'number',min,max,step:1,placeholder:'不限',value:value??''});input.setAttribute('aria-label',title);input.oninput=()=>{invalidate();change(input.value===''?null:Number(input.value));};label.append(input);return label;}
+  function numberField(title,value,min,change,max=100000,step=1){const label=el('label',title),input=el('input');Object.assign(input,{type:'number',min,max,step,placeholder:'不限',value:value??''});input.setAttribute('aria-label',title);input.oninput=()=>{invalidate();change(input.value===''?null:Number(input.value));};label.append(input);return label;}
   function renderTargets(){
     const opened=new Set([...document.querySelectorAll('#target-groups details[open]')].map(n=>n.dataset.section));
     $('target-help').textContent=mode==='single'?`为 ${name(selection()[0])} #${selection()[0].key} 设置目标。`:'同类型机器共用一组目标；不同类型的设置互不影响。';
@@ -61,7 +61,7 @@
       const g=targets[id]??(targets[id]=defaults(id)),card=el('section',null,'target-card'),title=A.profiles[id].name;
       const heading=el('div',null,'target-heading');heading.append(itemImage(items[0]),el('h3',title),el('span',mode==='joint'?`${items.length} 台共用`:`${name(items[0])} #${items[0].key}`));card.append(heading,el('p',items.map(m=>`${name(m)} #${m.key}`).join('、'),'muted'));
       const fields=el('div',null,'target-fields'),fixed=g.primary==='outcome',axes=[['quality','质量'],['performance','性能'],['power','最低耗电']];
-      if(fixed){const first=el('div',null,'fixed-target');first.append(el('small','第一目标'),el('strong',id==='mirage_projector'?'店铺吸引力':id==='desequencer'?'处理速度':'阻止率'));const second=el('div',null,'fixed-target');second.append(el('small','第二目标'),el('strong','最低耗电'));fields.append(first,second);}
+      if(fixed){const first=el('div',null,'fixed-target');first.append(el('small','第一目标'),el('strong',id==='mirage_projector'?'店铺吸引力':id==='desequencer'?'处理速度':id==='water_purifier'?'最高纯度':'阻止率'));const second=el('div',null,'fixed-target');second.append(el('small','第二目标'),el('strong','最低耗电'));fields.append(first,second);}
       else {
         fields.append(selectField(`${title} 第一目标`,axes,g.primary,v=>{invalidate();if(v===g.secondary)g.secondary=g.primary;g.primary=v;g.custom=false;g.preferred=A.targetPresets(snapshot,id,v).at(-1)?.[0]??null;renderTargets();}));
         fields.append(selectField(`${title} 第二目标`,axes.filter(([v])=>v!==g.primary),g.secondary,v=>{invalidate();g.secondary=v;}));
@@ -71,7 +71,7 @@
       if(g.primary!=='power'){
         const presets=A.targetPresets(snapshot,id,g.primary),target=el('div',null,'target-fields');
         if(presets.length)target.append(selectField(`${title} 期望目标`,[...presets,['custom','自定义目标']],g.custom?'custom':g.preferred??'custom',v=>{invalidate();g.custom=v==='custom';if(!g.custom)g.preferred=Number(v);renderTargets();}));
-        if(!presets.length||g.custom){const offset=id==='mirage_projector'&&snapshot.attraction?snapshot.attraction.effective:0;target.append(numberField(`${title} ${id==='mirage_projector'&&snapshot.attraction?'期望店铺吸引力':'自定义目标'}`,g.preferred==null?null:g.preferred+offset,g.primary==='outcome'?Math.max(0,offset):-10000,v=>g.preferred=v==null?null:v-offset,id==='security_alarm'?100:100000));}
+        if(!presets.length||g.custom){const offset=id==='mirage_projector'&&snapshot.attraction?snapshot.attraction.effective:0;target.append(numberField(`${title} ${id==='mirage_projector'&&snapshot.attraction?'期望店铺吸引力':'自定义目标'}`,g.preferred==null?null:g.preferred+offset,g.primary==='outcome'?Math.max(0,offset):-10000,v=>g.preferred=v==null?null:v-offset,id==='security_alarm'||id==='water_purifier'&&snapshot.formal?100:100000,id==='water_purifier'&&snapshot.formal?'any':1));}
         card.append(target,el('p','优先达到期望目标，再比较第二目标；未达到时保留本次最佳方案。','muted'));
       }
       const advanced=el('details');advanced.dataset.section=id+'-limits';advanced.open=opened.has(advanced.dataset.section);advanced.append(el('summary','组合限制（全部满足）'));const limits=el('div',null,'target-fields');
@@ -119,24 +119,26 @@
       for(const [value,cls]of [[before,'bar-before'],[after,'bar-after']]){const bar=el('span',null,cls);bar.style.width=Math.abs(value)/scale*100+'%';bars.append(bar);}bars.setAttribute('aria-hidden','true');row.append(heading,values,bars);
     }else row.append(heading,values);return row;
   }
-  function machineRows(m,b,a){const rows=[];if(m.identifier==='mirage_projector'&&snapshot.attraction)rows.push(comparisonRow('本机运行后店铺吸引力',snapshot.attraction.effective+b.output,snapshot.attraction.effective+a.output));if(m.identifier==='moisture_farm')rows.push(comparisonRow('水质',b.tierLabel,a.tierLabel));rows.push(comparisonRow(b.label,b.output,a.output,m.identifier!=='water_purifier'),comparisonRow('质量',b.quality,a.quality,true,'%'),comparisonRow('耗电',b.power,a.power,false));return rows;}
+  function machineRows(m,b,a){const rows=[];if(m.identifier==='mirage_projector'&&snapshot.attraction)rows.push(comparisonRow('本机运行后店铺吸引力',snapshot.attraction.effective+b.output,snapshot.attraction.effective+a.output));if(m.identifier==='moisture_farm')rows.push(comparisonRow('水质',b.tierLabel,a.tierLabel));rows.push(comparisonRow(b.label,b.output,a.output,m.identifier!=='water_purifier'||m.formal),comparisonRow('质量',b.quality,a.quality,true,'%'),comparisonRow('耗电',b.power,a.power,false));return rows;}
   function jointRows(machines,candidate,options){const before={machines:Object.fromEntries(machines.map(m=>[m.key,{evaluation:m.current}]))},b=A.jointSummary(machines,before,options),a=A.jointSummary(machines,candidate,options),rows=[];
-      rows.push(comparisonRow('达到期望目标',`${b.reached}/${b.count} 台`,`${a.reached}/${a.count} 台`));if(machines.some(m=>m.identifier==='moisture_farm')){const grades=['污水','锈水','幽水','基础水','优质水','纯水'];for(let i=5;i>=0;i--)if(i>=3||b.water[i]||a.water[i])rows.push(comparisonRow(grades[i],b.water[i],a.water[i],true,' ml'));rows.push(comparisonRow('总产水量',b.water.reduce((s,v)=>s+v,0),a.water.reduce((s,v)=>s+v,0),true,' ml'));}rows.push(comparisonRow('总耗电',b.power,a.power,false));return rows;}
+      rows.push(comparisonRow('达到期望目标',`${b.reached}/${b.count} 台`,`${a.reached}/${a.count} 台`));if(machines.some(m=>m.identifier==='moisture_farm')){const grades=['污水','锈水','幽水','基础水','优质水','纯水'];for(let i=5;i>=0;i--)if(i>=3||b.water[i]||a.water[i])rows.push(comparisonRow(grades[i],b.water[i],a.water[i],true,' ml'));if(machines.some(m=>m.formal))rows.push(comparisonRow('建议运行集水器',b.runningFarms,a.runningFarms,true,' 台'));rows.push(comparisonRow('总产水量',b.water.reduce((s,v)=>s+v,0),a.water.reduce((s,v)=>s+v,0),true,' ml'));}rows.push(comparisonRow('总耗电',b.power,a.power,false));return rows;}
   function renderSearchBest(){
     $('search-best').hidden=!result;
     if(!result)return;
-    const signature=JSON.stringify([run.searchKey,run.retained,Object.values(result.machines).map(p=>['output','tier','performance','efficiency','quality','power'].map(k=>p.evaluation[k]))]);
+    const signature=JSON.stringify([run.searchKey,run.retained,result.stoppedFarms,Object.values(result.machines).map(p=>['output','tier','performance','efficiency','quality','power'].map(k=>p.evaluation[k]))]);
     if(signature===searchPreviewSignature)return;searchPreviewSignature=signature;
     $('search-best-title').textContent=run.mode==='joint'?'当前最佳 · 整组效果':'当前最佳 · 本机效果';
     $('search-best-note').textContent=(run.retained?'已保留同条件的历史最佳。':'')+'找到更优方案时更新；停止后保留当前方案。';
     const m=run.machines[0];
     const rows=run.mode==='joint'?jointRows(run.machines,result,run.options):machineRows(m,m.current,result.machines[m.key].evaluation);
-    if(run.mode==='joint')for(const item of run.machines.filter(m=>m.identifier!=='moisture_farm'))rows.push(comparisonRow(`${name(item)} #${item.key} · ${item.current.label}`,item.current.output,result.machines[item.key].evaluation.output,item.identifier!=='water_purifier'));
+    if(run.mode==='joint')for(const item of run.machines.filter(m=>m.identifier!=='moisture_farm'))rows.push(comparisonRow(`${name(item)} #${item.key} · ${item.current.label}`,item.current.output,result.machines[item.key].evaluation.output,item.identifier!=='water_purifier'||item.formal||m.formal));
     else for(const [axis,label]of [['performance','性能'],['efficiency','效率']])rows.push(comparisonRow(label,m.current[axis],result.machines[m.key].evaluation[axis],true,'%'));
     $('search-best-metrics').replaceChildren(...rows);
   }
   function renderResult(){
     if(!result||!run)return;const joint=run.mode==='joint',m=machine(activeKey),plan=result.machines[activeKey];
+    $('operation-note').hidden=!(joint&&run.machines.some(m=>m.formal&&m.identifier==='moisture_farm'));
+    $('operation-note').textContent=joint&&run.machines.some(m=>m.formal&&m.identifier==='moisture_farm')?`共享空气按本次参与并运行的集水器计算；其他运行中的集水器也会争用空气，请一并选入。${result.stoppedFarms?.length?'建议手动停用：'+result.stoppedFarms.map(k=>name(machine(k))+' #'+k).join('、'):'建议参与集水器全部运行'}。网页不会停机或移动电池，容器、电量与天气还会影响实际收水。`:'';
     $('result-title').textContent=joint?`${run.machines.length} 台机器的联合方案`:`${name(m)}的装配方案`;$('summary-title').textContent=joint?'参与机器总体对比':'效果对比';$('result-machines-wrap').hidden=!joint;
     if(joint){$('overall-metrics').replaceChildren(...jointRows(run.machines,result,run.options));
       $('result-machines').replaceChildren(...run.machines.map(item=>{const b=button('',()=>{activeKey=item.key;hideTooltip();renderResult();},'result-machine');b.setAttribute('aria-pressed',String(item.key===activeKey));b.append(itemImage(item),el('strong',`${name(item)} #${item.key}`),el('small',output(item,item.current)+' → '+output(item,result.machines[item.key].evaluation)));return b;}));
@@ -151,9 +153,9 @@
   }
   function svg(tag,attrs,text){const n=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const [k,v]of Object.entries(attrs||{}))n.setAttribute(k,String(v));if(text!=null)n.textContent=text;return n;}
   function renderBoard(id,m,placements,evaluation,labels,proposed){
-    const canvas=svg('svg',{viewBox:'0 0 400 295',role:'group','aria-label':`${name(m)} ${proposed?'方案配装':'原配装'}`}),size=50,ox=36,oy=26;
-    for(let x=0;x<7;x++)canvas.append(svg('text',{x:ox+x*size+25,y:16,'text-anchor':'middle',class:'board-label'},x+1));
-    for(let y=0;y<5;y++){canvas.append(svg('text',{x:18,y:oy+y*size+30,'text-anchor':'middle',class:'board-label'},y+1));for(let x=0;x<7;x++){const blocked=!!(BigInt(m.blocked)&(1n<<BigInt(y*7+x)));canvas.append(svg('rect',{x:ox+x*size,y:oy+y*size,width:size,height:size,class:blocked?'board-cell blocked':'board-cell'}));if(blocked)canvas.append(svg('text',{x:ox+x*size+25,y:oy+y*size+30,'text-anchor':'middle',class:'board-label'},'×'));}}
+    const canvas=svg('svg',{viewBox:`0 0 ${(m.width??7)*50+50} ${(m.height??5)*50+45}`,role:'group','aria-label':`${name(m)} ${proposed?'方案配装':'原配装'}`}),size=50,ox=36,oy=26;
+    for(let x=0;x<(m.width??7);x++)canvas.append(svg('text',{x:ox+x*size+25,y:16,'text-anchor':'middle',class:'board-label'},x+1));
+    for(let y=0;y<(m.height??5);y++){canvas.append(svg('text',{x:18,y:oy+y*size+30,'text-anchor':'middle',class:'board-label'},y+1));for(let x=0;x<(m.width??7);x++){const blocked=!!(BigInt(m.blocked)&(1n<<BigInt(y*(m.width??7)+x)));canvas.append(svg('rect',{x:ox+x*size,y:oy+y*size,width:size,height:size,class:blocked?'board-cell blocked':'board-cell'}));if(blocked)canvas.append(svg('text',{x:ox+x*size+25,y:oy+y*size+30,'text-anchor':'middle',class:'board-label'},'×'));}}
     for(const pl of placements){const p=snapshot.pieces.find(p=>p.key===pl.key),shape=A.transform(p.shape,pl.rotation,pl.flipped),index=labels.get(p.key),g=svg('g',{class:'piece-shape',tabindex:0,role:'button','aria-label':`${index} ${name(p)} #${p.key}`,'data-piece':p.key,style:`--piece-color:${colors[(index-1)%colors.length]}`});
       const cells=new Set(shape.cells.map(c=>`${c.x}:${c.y}`));let edges='';for(const c of shape.cells){const x=ox+(pl.x+c.x)*size,y=oy+(pl.y+c.y)*size;g.append(svg('rect',{x:x+1,y:y+1,width:48,height:48,class:'piece-cell'}));if(!cells.has(`${c.x-1}:${c.y}`))edges+=`M${x+1},${y+1}v48`;if(!cells.has(`${c.x+1}:${c.y}`))edges+=`M${x+49},${y+1}v48`;if(!cells.has(`${c.x}:${c.y-1}`))edges+=`M${x+1},${y+1}h48`;if(!cells.has(`${c.x}:${c.y+1}`))edges+=`M${x+1},${y+49}h48`;}
       const url=spriteUrl(p);if(url){const w=p.shape.width*size,h=p.shape.height*size,rot=['',`matrix(0 -1 1 0 0 ${w})`,`matrix(-1 0 0 -1 ${w} ${h})`,`matrix(0 1 -1 0 ${h} 0)`];g.append(svg('image',{href:url,width:w,height:h,transform:`translate(${ox+pl.x*size} ${oy+pl.y*size}) ${rot[pl.rotation]} ${pl.flipped?`translate(${w} 0) scale(-1 1)`:''}`,class:'board-item-image','pointer-events':'none'}));}
@@ -236,9 +238,9 @@
   window.assemblerFeedbackContext=()=>JSON.stringify({tool:'模块组装器',version:snapshot?.version||null,mode,selected:selection().map(m=>({type:m.identifier,key:m.key})),locks:[...locks],borrow:$('borrow').checked,targets,status:busy?'计算中':result?'已生成':'未生成',results:result?Object.fromEntries(Object.entries(result.machines).map(([key,p])=>[key,{performance:p.evaluation.performance,quality:p.evaluation.quality,power:p.evaluation.power,output:p.evaluation.output}])):null},null,2);
   document.addEventListener('pointerdown',e=>{if(!$('piece-tooltip').hidden&&!e.target.closest('#piece-tooltip,.piece-shape,.source-piece'))hideTooltip();});
   window.addEventListener('resize',hideTooltip);window.addEventListener('scroll',()=>{if(!compactDetails())hideTooltip();});
-  const saveSession=ToolSession.bind('assembler',()=>({snapshot,mode,step:busy&&result?4:step,grouping,selected:[...selected],locks:[...locks],targets,result,run,activeKey,history,jointSeed,moves,guideOpen,bestPlans,borrow:$('borrow').checked,searchMode:$('search-mode').value,saveStatus:$('save-status').textContent,resultStatus:busy?'搜索已暂停 · 保留离开页面前找到的方案':$('result-status').textContent}));
+  const saveSession=ToolSession.bind('assembler-formal-v1',()=>({snapshot,mode,step:busy&&result?4:step,grouping,selected:[...selected],locks:[...locks],targets,result,run,activeKey,history,jointSeed,moves,guideOpen,bestPlans,borrow:$('borrow').checked,searchMode:$('search-mode').value,saveStatus:$('save-status').textContent,resultStatus:busy?'搜索已暂停 · 保留离开页面前找到的方案':$('result-status').textContent}));
   function restoreSession(){
-    const saved=ToolSession.read('assembler');if(!saved)return;
+    const saved=ToolSession.read('assembler-formal-v1');if(!saved)return;
     try{
       if(!['single','joint'].includes(saved.mode))return;
       mode=saved.mode;grouping=saved.grouping==='function'?'function':'area';

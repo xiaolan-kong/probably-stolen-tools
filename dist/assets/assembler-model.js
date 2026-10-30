@@ -1,4 +1,4 @@
-/* Read-only adapter for the Easy Save text dialect used by Demo 049-Rev5-L. */
+/* Read-only adapter for the Easy Save text dialect: VERSION 100 and Demo 049-Rev5-L. */
 (function(root) {
   'use strict';
   function parseSaveText(text) {
@@ -60,7 +60,12 @@
     wine_rack: {name:'催陈器', power:24, primary:'quality', tiers:true},
     mirage_projector: {name:'幻影投影仪', power:16, primary:'performance'},
     security_alarm: {name:'警报系统', power:4, primary:'performance'},
-    desequencer: {name:'密码解序器', power:10, primary:'performance'}
+    desequencer: {name:'密码解序器', power:10, primary:'performance'},
+    hydroponic: {name:'水培机', power:8, primary:'performance'},
+    plant_dna_manipulator: {name:'DNA 操作机', power:12, primary:'quality'},
+    printer: {name:'3D 打印机', power:8, primary:'performance'},
+    deal_maker: {name:'议价设备', power:25, primary:'quality'},
+    evaporator: {name:'蒸发器', power:6, primary:'quality'}
   };
   const effectNames = {MODULE_EFFECT_PREMIUM:'优质', MODULE_EFFECT_INFERIOR:'劣质',
     MODULE_EFFECT_LEARNING_ALGORITHM:'自学习', MODULE_EFFECT_DEGRADING:'退化', MODULE_EFFECT_OVERVOLTED:'超压',
@@ -83,19 +88,62 @@
       cells:shape.cells.map(c=>{const x=flipped?shape.width-1-c.x:c.x,y=c.y;
         return rotation===0?{x,y}:rotation===1?{x:y,y:shape.width-1-x}:rotation===2?{x:shape.width-1-x,y:shape.height-1-y}:{x:shape.height-1-y,y:x};})};
   }
-  function geometry(piece, placement) {
+  function geometry(piece, placement, machine = {}) {
     const shape=transform(piece.shape,placement.rotation,placement.flipped), {x,y}=placement;
-    integer(x,'目标列',0,6); integer(y,'目标行',0,4);
-    if(x+shape.width>7 || y+shape.height>5) throw Error('模组超出机器边界。');
+    const width=machine.width??7,height=machine.height??5;
+    integer(x,'目标列',0,width-1); integer(y,'目标行',0,height-1);
+    if(x+shape.width>width || y+shape.height>height) throw Error('模组超出机器边界。');
     let mask=0n,touch=0n;
-    for(const c of shape.cells) {const xx=x+c.x, yy=y+c.y,bit=yy*7+xx;mask|=1n<<BigInt(bit);
-      for(const [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1]]) if(xx+dx>=0&&xx+dx<7&&yy+dy>=0&&yy+dy<5) touch|=1n<<BigInt((yy+dy)*7+xx+dx);
+    for(const c of shape.cells) {const xx=x+c.x, yy=y+c.y,bit=yy*width+xx;mask|=1n<<BigInt(bit);
+      for(const [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1]]) if(xx+dx>=0&&xx+dx<width&&yy+dy>=0&&yy+dy<height) touch|=1n<<BigInt((yy+dy)*width+xx+dx);
     }
     return {mask,touch:touch&~mask};
   }
   const compatible = (machine,piece) => piece.effects.every(e=>Object.hasOwn(effectNames,e)) &&
     (piece.kind==='node'||piece.allowed.includes(machine.identifier));
+  const purityCaps=[99,99.15,99.35,99.65,99.8,99.9,100];
+  function readParameters(id,tags) {
+    const read=(key,fallback)=>tags[key]===undefined&&fallback!==undefined?fallback:integer(tags[key]?.valueInt,key);
+    const ratio=key=>tags[key]?.valueEnabled?integer(read(key),key,1):null;
+    const params={basePower:integer(read('MACHINERY_DRAWN_POWER_BASE'),'基础耗能',0),
+      performanceRatio:ratio('MACHINE_PERFORMANCE_RATIO_INT'),efficiencyRatio:ratio('MACHINE_EFFICIENCY_RATIO_INT'),
+      performanceReducesPower:!!tags.MACHINE_PERFORMANCE_REDUCES_POWER_TAG?.valueEnabled,
+      qualityRatio:read('MACHINE_QUALITY_RATIO_INT',0),processLowPower:!!tags.LOW_POWER_MODE_BOOL?.valueBool};
+    if(['desequencer','hydroponic','plant_dna_manipulator','printer'].includes(id))params.baseProcessingSpeed=integer(read('BASE_PROCESSING_SPEED_TAG'),'基础处理速度',0);
+    if(id==='mirage_projector'){
+      params.projectorPerformanceRatio=Math.max(1,read('MACHINE_PERFORMANCE_RATIO_INT',0));
+      params.projectorQualityRatio=Math.max(1,read('MACHINE_QUALITY_RATIO_INT',0));
+    }
+    return params;
+  }
+  function formalStats(machine,stats,blast) {
+    const v=machine.parameters,{performance:p,efficiency:e,quality:q}=stats,b=v.basePower;
+    const mul=(a,b)=>integer(a*b,'属性乘积');
+    let power=b-Math.trunc(mul(b,e)/100);
+    if(v.efficiencyRatio)power=Math.trunc(Math.fround(b-Math.fround(Math.trunc(mul(b,e)/v.efficiencyRatio)/100)));
+    if(v.performanceReducesPower&&v.performanceRatio)power-=Math.trunc(Math.fround(Math.trunc(mul(b,p)/v.performanceRatio)/100));
+    if(machine.identifier==='deal_maker')power=b-Math.trunc(mul(b,integer(e+p,'性能与效率合计'))/100);
+    power=Math.max(1,power);
+    if(v.processLowPower&&['printer','evaporator'].includes(machine.identifier))power=0;
+    let output=0,tier=0,tierLabel='',label='',adjustedQuality=v.qualityRatio>0?Math.trunc(q/v.qualityRatio):0;
+    switch(machine.identifier){
+      case 'moisture_farm':tier=[-50,0,50,100,150].filter(t=>q>=t).length;tierLabel=['污水','锈水','幽水','基础水','优质水','纯水'][tier];output=Math.max(0,Math.trunc(mul(integer(p+100,'性能'),850000)/100))/1000;label='标称产量（ml）';break;
+      case 'water_purifier':tier=[15,25,50,75,100,200].filter(t=>q>=t).length;output=purityCaps[tier];label='最高纯度（%）';break;
+      case 'furnace':tier=Math.max(0,Math.trunc(Math.max(0,q)/100)-(blast?1:0));output=tier;label='纯度提升档数（最终成色取决于原料）';break;
+      case 'wine_rack':tier=1+Math.trunc(Math.max(0,q)/125);output=tier;label='催陈天数';break;
+      case 'mirage_projector':output=Math.max(0,integer(100+Math.trunc(p/v.projectorPerformanceRatio)+Math.trunc(q/v.projectorQualityRatio),'吸引力'));label='吸引力';break;
+      case 'security_alarm':output=Math.max(0,integer(50+p,'阻止率'));label='阻止率原值（%）';break;
+      case 'desequencer':case 'hydroponic':case 'plant_dna_manipulator':case 'printer':{
+        const speed=v.baseProcessingSpeed;output=v.performanceRatio?Math.trunc(Math.fround(speed+Math.fround(Math.trunc(mul(speed,p)/v.performanceRatio)/100))):integer(speed+Math.trunc(mul(speed,p)/100),'处理速度');label='处理速度';break;
+      }
+      case 'deal_maker':output=Math.max(0,integer(10+adjustedQuality,'议价加成'));label='议价成功率加成（百分点）';break;
+      case 'evaporator':output=Math.min(100,Math.max(0,q));label='馏出液回收率（%）';break;
+      default:throw Error('暂不支持这类机器。');
+    }
+    return {...stats,power,output,label,tier,tierLabel,adjustedQuality,purityCap:machine.identifier==='water_purifier',sharedAir:machine.identifier==='moisture_farm'};
+  }
   function fromStats(machine, stats, blast=false) {
+    if(machine.formal)return formalStats(machine,stats,blast);
     const {performance:p,efficiency:e,quality:q}=stats, profile=profiles[machine.identifier];
     const mul=(a,b)=>integer(a*b,'属性乘积');
     const power=Math.max(1,machine.identifier==='wine_rack' ? Math.trunc(Math.fround(24-Math.fround(Math.trunc(mul(24,e)/2)/100)))+Math.trunc(Math.fround(Math.trunc(mul(24,p)/2)/-100)) : profile.power-Math.trunc(mul(profile.power,e)/100));
@@ -118,7 +166,7 @@
     for(const pl of placements) {
       const piece=byKey.get(pl.key);
       if(!piece||seen.has(pl.key)||!compatible(machine,piece)) throw Error('方案含重复、未知或不兼容模组。');
-      seen.add(pl.key);const g=cached?.get(`${pl.key}:${pl.x}:${pl.y}:${pl.rotation}:${+pl.flipped}`)||geometry(piece,pl);
+      seen.add(pl.key);const g=cached?.get(`${pl.key}:${pl.x}:${pl.y}:${pl.rotation}:${+pl.flipped}`)||geometry(piece,pl,machine);
       if(occupied&g.mask) throw Error('模组重叠或占用了锁闭格。'); occupied|=g.mask;
       selected.push({piece,pl,...g});
     }
@@ -150,7 +198,8 @@
   function readSave(text) {
     const raw=parseSaveText(text), player=raw?.playerStore?.value;
     if(!player||typeof player.saveVersion!=='string')throw Error('请选择游戏槽位 save_数字.es3，不是存档索引或设置文件。');
-    if(player.saveVersion!=='VERSION 049-Rev5-L')throw Error(`当前仅支持 Demo 049-Rev5-L；此存档为 ${plain(player.saveVersion)}。`);
+    if(!['VERSION 049-Rev5-L','VERSION 100'].includes(player.saveVersion))throw Error(`当前仅支持正式版 VERSION 100（核对 Build 26284217）及 Demo 049-Rev5-L；此存档为 ${plain(player.saveVersion)}。`);
+    const formal=player.saveVersion==='VERSION 100';
     const roots={mainInvJSON:'主库存',backInvJSON:'柜台',hiddenInvJSON:'暗格',showcaseInvJSON:'展示柜'};
     const items=[],byId=new Set(),warnings=[];
     for(const [field,title] of Object.entries(roots)) {
@@ -179,7 +228,7 @@
           const current=local[at],owner=parents.get(at),parent=local[owner.parent];
           if(current.tags.ITEM_BEHIND_LOCK_TAG?.valueEnabled || parent.tags.LOCKED_CONTAINER_TAG?.valueEnabled&&parent.tags.LOCK_STATUS?.valueBool!==false)reason='容器尚未解密';
           if(!current.tags.IS_OWNED_TAG?.valueEnabled)reason=reason||'尚未拥有';
-          if(current!==item&&current.raw.itemTypes?.includes('MACHINE'))machineKey=current.key;
+          if(current!==item&&(Object.hasOwn(profiles,current.identifier)||current.raw.itemTypes?.includes('MACHINE')))machineKey=current.key;
           if(current!==item&&!area&&['machine_bay','machine_bay_ext'].includes(current.identifier))area={key:current.key,name:current.displayName,baseName:current.name};
           const sh=current.raw.itemModifiedShape;
           const pos=`(${integer(bp(sh,'minX'),'来源列',0,10000)+1}, ${integer(bp(sh,'minY'),'来源行',0,10000)+1})`;
@@ -200,11 +249,12 @@
       if(!types.includes('MODULE')&&!types.includes('NODE'))continue;
       const kind=types.includes('NODE')?'node':'module',tags=item.tags;
       const effects=['MODULE_EFFECT1_TAG','MODULE_EFFECT2_TAG'].flatMap(k=>tags[k]?.valueEnabled&&tags[k].internalValueString?[tags[k].internalValueString]:[]);
-      const allowed=kind==='node'||tags.MODULE_TYPE_UNIVERSAL?.valueEnabled?Object.keys(profiles):tags.MODULE_TYPE_FURNACE?.valueEnabled?['furnace']:tags.MODULE_TYPE_ALARM?.valueEnabled?['security_alarm','desequencer']:[];
+      const allowed=kind==='node'||tags.MODULE_TYPE_UNIVERSAL?.valueEnabled?Object.keys(profiles):Object.entries({MODULE_TYPE_FURNACE:['furnace'],MODULE_TYPE_ALARM:['security_alarm','desequencer'],MODULE_TYPE_HYDROPONIC:['hydroponic'],MODULE_TYPE_DNA_MANIPULATOR:['plant_dna_manipulator'],MODULE_TYPE_PRINTER:['printer'],MODULE_TYPE_EVAPORATOR:['evaporator']}).filter(([k])=>tags[k]?.valueEnabled).flatMap(([,ids])=>ids);
       const base=Object.fromEntries(axes.map(k=>[k,intTag(item,`BONUS_PERCENTAGE_${k.toUpperCase()}_INT`,kind==='node'?0:undefined)]));
       const shape=shapeOf(item.raw.itemShape);
       if(shape.width>7||shape.height>7||!shape.cells.length)throw Error('模组形状不在支持范围内。');
       let reason=item.reason;
+      if(item.machineKey&&(item.parentKey!==item.machineKey||item.parentNode!==3))reason=reason||'物品不在已核对的模组舱内，不能借用';
       if(item.raw.unitCount!==1)reason=reason||'不支持堆叠模组';
       if(tags.MODULE_STUCK_TAG?.valueEnabled)reason=reason||'模组不可拆卸';
       if(effects.some(e=>!Object.hasOwn(effectNames,e)))reason=reason||'暂不支持的特性';
@@ -218,18 +268,22 @@
       if(!Object.hasOwn(profiles,item.identifier))continue;
       const stage=intTag(item,'MODULE_UPGRADE_STAGE_INT',0);
       if(stage<0||stage>2)throw Error('机器升级等级不受支持。');
-      const cells=stage===2?[]:stage===1?[0,6,28,34]:[0,6,10,16,17,18,24,28,34];
-      const machine={key:item.key,name:item.name,note:item.note,displayName:item.displayName,area:item.area,sprite:`${item.raw.spriteAtlasPath?.split('/').pop()}/${item.raw.spritePath}`,identifier:item.identifier,source:item.source,position:item.position,stage,blocked:cells.reduce((m,c)=>m|(1n<<BigInt(c)),0n).toString(),installed:[],error:item.reason};
+      const fixed=item.identifier==='evaporator';
+      const cells=fixed||stage===2?[]:stage===1?[0,6,28,34]:[0,6,10,16,17,18,24,28,34];
+      const machine={key:item.key,name:item.name,note:item.note,displayName:item.displayName,area:item.area,sprite:`${item.raw.spriteAtlasPath?.split('/').pop()}/${item.raw.spritePath}`,identifier:item.identifier,source:item.source,position:item.position,stage,formal,width:fixed?4:7,height:fixed?4:5,blocked:cells.reduce((m,c)=>m|(1n<<BigInt(c)),0n).toString(),installed:[],error:item.reason};
+      if(formal&&item.tags.MACHINE_STATE_TAG?.internalValueString==='STATE_WORKING')machine.error='机器正在工作；完成任务并重新保存后再装配';
+      if(fixed&&stage!==0)machine.error='蒸发器固定舱位与升级标记不一致';
       for(const child of item.children)if(child.parentNode===3) {
         const piece=pieceMap.get(child.key);if(!piece){machine.error='模组舱内含暂不支持的物品';continue;}
         machine.installed.push(piece.placement);if(piece.reason)machine.error=piece.reason;
       }
       const saved={performance:intTag(item,'TOTAL_PERCENTAGE_PERFORMANCE_BONUS_INT',0),efficiency:intTag(item,'TOTAL_PERCENTAGE_POWER_BONUS_INT',0),quality:intTag(item,'TOTAL_PERCENTAGE_QUALITY_BONUS_INT',0)};
-      machine.saved=fromStats(machine,saved,machine.installed.some(pl=>pieceMap.get(pl.key).identifier==='furnace_module_blast'));
       try {
+        if(formal)machine.parameters=readParameters(item.identifier,item.tags);
+        machine.saved=fromStats(machine,saved,machine.installed.some(pl=>pieceMap.get(pl.key).identifier==='furnace_module_blast'));
         machine.current=evaluate(machine,pieceMap,machine.installed);
         if(axes.some(k=>machine.current[k]!==saved[k]))machine.error=machine.error||'存档属性与重算不一致，暂不可生成方案';
-      }catch(e){machine.error=machine.error||e.message;}
+      }catch(e){machine.error=machine.error||e.message;machine.saved??={...saved,power:0,output:0,label:'无法核对',tier:0,tierLabel:''};}
       machines.push(machine);
     }
     if(!machines.length)warnings.push('此存档的主库存、柜台、暗格和展示柜中，没有找到支持的机器。');
@@ -241,7 +295,7 @@
       !item.parentKey&&['mainInvJSON','backInvJSON'].includes(item.root)||
       item.tags.CONTAINER_TAG?.valueEnabled&&/^(storage_bay(_large)?|smuggler_bay(_mod)?|backpack_(small|medium|large))$/.test(item.identifier)
     )).map(item=>({key:item.key,label:item.parentKey?`${item.displayName} #${item.key} ${item.position}`:roots[item.root],source:item.source,identifier:item.identifier}));
-    return {version:player.saveVersion,scope:`${player.saveSlotId}:${player.runID}`,day:raw.storeStation?.value?.dayCounter,machines,pieces,warnings,attraction,storage};
+    return {version:player.saveVersion,formal,rulesBuild:formal?26284217:null,scope:`${player.saveSlotId}:${player.runID}`,day:raw.storeStation?.value?.dayCounter,machines,pieces,warnings,attraction,storage};
   }
   function storeAttraction(player) {
     const base=player.baseStoreAttractiveness,bonus=player.projectorAttractivenessBonus,garbage=player.garbageLevel;
@@ -250,7 +304,9 @@
     return {base,bonus,garbage,penalty,effective,current:effective+bonus,hardMode:player.isHardMode};
   }
   function targetPresets(snapshot,id,primary) {
+    if(snapshot.formal&&id==='evaporator'&&primary==='quality')return [[100,'回收率 100% · 质量 100%']];
     if(id==='moisture_farm'&&primary==='quality')return [[50,'基础水 · 50%'],[100,'优质水 · 100%'],[150,'纯水 · 150%']];
+    if(id==='water_purifier'&&primary==='outcome'&&snapshot.formal)return purityCaps.map(v=>[v,`最高纯度 ${v}%`]);
     if(primary!=='outcome')return [];
     if(id==='desequencer')return [75,100,125].map(v=>[v,`处理速度 ${v}`]);
     if(id==='security_alarm')return [[100,'阻止率 100%']];
@@ -260,10 +316,10 @@
     return remaining.length?remaining.map(([v,label])=>[v-a.effective,`店铺 ${v} · ${label}`]):[[0,'店铺基础吸引力已覆盖全部档位']];
   }
   const secondaryFor=g=>g.secondary||(g.primary==='outcome'?'power':g.primary==='performance'?'quality':'performance');
-  const metric=(machine,e,axis)=>axis==='power'?-e.power:axis==='outcome'?(machine.identifier==='water_purifier'?-e.output:e.output):e[axis];
+  const metric=(machine,e,axis)=>axis==='power'?-e.power:axis==='outcome'?(machine.identifier==='water_purifier'&&!machine.formal?-e.output:e.output):e[axis];
   function validateGoal(machine,g) {
     if(!['quality','performance','power','outcome'].includes(g.primary)||!['quality','performance','power'].includes(secondaryFor(g))||g.primary===secondaryFor(g))throw Error('第一、第二目标无效或重复。');
-    for(const key of ['preferred','minQuality','minPerformance','maxPower'])if(g[key]!=null&&(!Number.isInteger(g[key])||g[key]<(key==='maxPower'?1:-10000)||g[key]>100000))throw Error('装配目标或限制无效。');
+    for(const key of ['preferred','minQuality','minPerformance','maxPower'])if(g[key]!=null&&(!(key==='preferred'&&machine.formal&&machine.identifier==='water_purifier'?Number.isFinite(g[key]):Number.isInteger(g[key]))||g[key]<(key==='maxPower'?0:-10000)||g[key]>100000))throw Error('装配目标或限制无效。');
     if(g.primary==='outcome'&&g.preferred!=null&&(g.preferred<0||machine.identifier==='security_alarm'&&g.preferred>100))throw Error('产出目标不能为负，警报系统的目标上限为 100%。');
     if(g.requirements!=null&&!Array.isArray(g.requirements))throw Error('必选模组设置无效。');
     const seen=new Set();for(const r of g.requirements||[]){if(!r||typeof r.identifier!=='string'||seen.has(r.identifier)||!Number.isInteger(r.count)||r.count<0||r.count>35||typeof r.exact!=='boolean')throw Error('必选模组数量或种类无效。');seen.add(r.identifier);}
@@ -279,7 +335,7 @@
     const unsupported=new Set(snapshot.machines.filter(m=>m.error).map(m=>m.key));
     return snapshot.pieces.filter(p=>!p.reason&&compatible(machine,p)&&!locked.has(p.machineKey)&&!unsupported.has(p.machineKey)&&(!p.machineKey||p.machineKey===machine.key||borrow));
   }
-  const api = {parseSaveText,readSave,profiles,effectNames,transform,geometry,evaluate,fromStats,availablePieces,storeAttraction,targetPresets,secondaryFor,metric,validateGoal,requirementDeficit,statDeficit};
+  const api = {parseSaveText,readSave,readParameters,purityCaps,profiles,effectNames,transform,geometry,evaluate,fromStats,availablePieces,storeAttraction,targetPresets,secondaryFor,metric,validateGoal,requirementDeficit,statDeficit};
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.Assembler = api;
 })(typeof self === 'object' ? self : globalThis);

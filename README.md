@@ -1,12 +1,12 @@
 # 深空当铺工具站
 
-试用版 `v0.3.1`，适用游戏 `Demo 049-Rev5-L`。犯罪金额计算器、服务方案比较、逐日安排、准确声望、分类罪行与当天追加额度。无需安装依赖或登录；计算在浏览器完成，主题偏好保存在本机。
+试用版 `v0.4.0`，犯罪规则适用正式版 `VERSION 100 / Build 26284217`。犯罪金额计算器、服务方案比较、逐日安排、准确声望、分类罪行与当天追加额度。无需安装依赖或登录；计算在浏览器完成，主题偏好保存在本机。
 
 文字＋图片反馈已接通 Supabase，玩家免登录提交，用私有查询链接查看处理结果；管理员在 `admin.html` 登录、查看、回复。模块组装器支持真实存档、单机与联合装配、共享锁定、按步骤装配指导和实时最佳方案。
 
 ## 发布到 GitHub Pages
 
-正式站点：https://xiaolan-kong.github.io/probably-stolen-tools/ 。仓库 `xiaolan-kong/probably-stolen-tools`，发布分支 `main`；本包为 v0.3.1 更新候选。以 GitHub Actions 成功与公开资源核验为上线依据。
+正式站点：https://xiaolan-kong.github.io/probably-stolen-tools/ 。仓库 `xiaolan-kong/probably-stolen-tools`，发布分支 `main`；本包为 v0.4.0 更新候选。以 GitHub Actions 成功与公开资源核验为上线依据。
 
 1. 确认公开发布后，将本文件夹内容上传到目标 GitHub 仓库；不要上传整个素材文件夹、本机研究证据、截图、存档或游戏程序。
 2. 仓库 **Settings → Pages → Source** 选择 **GitHub Actions**。
@@ -23,6 +23,8 @@
 
 ```text
 node tests/model.test.cjs
+node tests/fixer-tiers.test.cjs
+node tests/assembler-formal.test.cjs
 node tests/ranges.test.cjs
 node tests/theme.test.cjs
 node tests/additions.test.cjs
@@ -49,11 +51,11 @@ node tests/release.test.cjs
 
 存档在浏览器本机解析，不上传、不改写。单机与联合共享导入数据、锁定和操作进度；切换工具页面保留当前标签页的数据。搜索使用同源 Mod 核心的 WebAssembly 产物，标准约 1 分钟，深度最多 5 分钟；同条件保留历史最佳并实时展示效果，可以随时停止。限时搜索不保证全局最优。
 
-网页不能感知游戏中实际搬移；照图操作后确认装好并锁定，或保存游戏后重新导入。适用 Demo 049-Rev5-L；已完成真实存档离线核验及 Native/WASM 对照，尚未进行游戏内照图装配验收。
+网页不能感知游戏中实际搬移；照图操作后确认装好并锁定，或保存游戏后重新导入。支持正式版 VERSION 100 与 Demo 049-Rev5-L。12类机器原生离线核心／WASM与JS数值对照通过；真实正式版样本无机器，新增机型依赖构造场景。未进行游戏内照图装配验收。正式版存档无热修Build标记，不保证其他构建及修改机器逻辑的外部Mod。
 
 ## 规则与边界
 
-规则核对日期：2026-10-14。依据本机游戏原生程序静态分析和离线边界核算，不代表官方工具或完整游戏实机验收。已核对按罪名减额、调查增长、清除冷却14天、已派警的证据遗失扣20，以及上层区声望≤−60时扣40。治安声望填写准确数值，支持小数；同罪名先合并再减额。
+规则核对日期：2026-10-30，当前程序集SHA-256：0fd3de05d961c8a415758f8f78a8e0a32692b8b45fb34350df885ed8bd5e8eb0。三级善后分别15%+50／20%+150／25%+400，按最高等级逐罪名处理；基础夜费25／45／70。依据本机游戏原生程序静态分析和离线边界核算，不代表官方工具或完整游戏实机验收。已核对按罪名减额、调查增长、清除冷却14天、已派警的证据遗失扣20，以及上层区声望≤−60时扣40。治安声望填写准确数值，支持小数；同罪名先合并再减额。
 
 可勾选并按罪名填写当天预计新增的正式犯罪金额，合并生成方案并逐类计算剩余额度；各类上限不能相加。并非成交额或瓶数，不自动转换假水等隐藏追踪器。其后新增、延迟入账、现场搜查或外部声望变化不纳入；隔天报告变化后需重新输入。罚款按能支付计算，所需现金及服务费须留足；付不起可能被拘捕。无可行方案不等于必死。此前玩家观察到的总扣30场景尚未复现，不把它解释为固定扣30。
 
@@ -71,7 +73,7 @@ node tests/release.test.cjs
 
 ## 攻略板块
 
-攻略目录 `guides.html` 按阅读目的分为“技术文章”和“几图流”。`guide-return-customers.html` 保留八节机制解释，四张表格图转为HTML表格，示意图最大440px、检测截图220px并排。`guide-water-recipes.html` 独立提供四套配方、底水要求和原图查看／保存；两页互相链接。保留旧文章地址和方案锚点，已分享链接仍可到达对应入口。正文沿用作者小黑盒发表版（193981053），配图保留本地原图。
+攻略目录 `guides.html` 按阅读目的分为“技术文章”和“几图流”。`guide-return-customers.html` 保留八节机制解释，四张表格图转为HTML表格，示意图最大440px、检测截图220px并排。`guide-water-recipes.html` 独立提供四套配方、底水要求和原图查看／保存；两页互相链接。保留旧文章地址和方案锚点，已分享链接仍可到达对应入口。正文沿用作者小黑盒发表版（193981053），配图保留本地原图；目录及两页均以醒目提示撤回其作为正式版上层区回头客玩法的推荐，标为Demo历史资料。
 
 这是本次内容同步，不会自动抓取后续小黑盒修改。攻略页未接入现有三类工具 PV 统计，未修改 Supabase。
 
@@ -81,3 +83,12 @@ node tests/release.test.cjs
 
 - [GitHub Pages 静态托管及访问数据说明](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages)
 - [GitHub Pages 自定义工作流](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)
+
+## v0.4.0 一致性说明
+
+- Windows正式版与Demo共用 `%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`。选择 `save_数字.es3`；同目录可混存不同版本。索引、设置文件不能代替槽位存档。
+- 搜索使用当前Module Assembler完整Planning源码快照，逐文件散列见 `dist/assets/planner/source-manifest.json`；网页桥接使用标准JSON库与存档参数，游戏程序集不随网站分发。
+- 集水器按参与运行的台数逐台进行共享空气单精度取整后分水质汇总，并保留核心给出的停机建议；其他实际运行集水器需一起选入。网页不能操作游戏。净水器显示最高纯度，不将其冒充一夜最终产水。
+- 新增水培、DNA、打印、议价和蒸发器的通用目标与布局搜索。游戏内2.1.0的种子/芯片/材料专属快捷目标和模式选择未全部搬到网页；使用必选模块数量保留需要的功能，任务完整流程以游戏为准。
+- 工坊2.0.0为已公开版本，2.1.0仍是本地测试版。网站更新不发布Mod。
+- 犯罪动态上限含罚款/派警后补救；简明表要求全程调查<100，二者条件不同。费用需自备，不清理隐藏待入账记录。
