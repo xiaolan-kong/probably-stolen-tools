@@ -1,7 +1,14 @@
 'use strict';
 const adminEl=id=>document.getElementById(id),adminStatus=adminEl('admin-status');
 let adminToken='',listPage=0,selectedTicket='';
-function logout(){adminToken='';selectedTicket='';adminEl('admin-login').hidden=false;adminEl('admin-workspace').hidden=true;adminEl('ticket-list').replaceChildren();adminEl('ticket-detail').replaceChildren();adminEl('reply-form').hidden=true;adminEl('admin-password').value='';}
+function setAdminPvExclusion(expiresIn=0){
+  try{
+    const seconds=Number(expiresIn);
+    if(Number.isFinite(seconds)&&seconds>0){localStorage.setItem('ps-tools-admin-pv-until',String(Date.now()+seconds*1000));adminEl('admin-pv-status').textContent='本浏览器在本次登录有效期内使用工具、阅读攻略不计入访问统计；退出或到期后恢复。';}
+    else{localStorage.removeItem('ps-tools-admin-pv-until');adminEl('admin-pv-status').textContent='已恢复本浏览器的访问计数。';}
+  }catch{adminEl('admin-pv-status').textContent='浏览器阻止了本地存储，无法排除自己的访问；工具仍可正常使用。';}
+}
+function logout(){setAdminPvExclusion();adminToken='';selectedTicket='';adminEl('admin-login').hidden=false;adminEl('admin-workspace').hidden=true;adminEl('ticket-list').replaceChildren();adminEl('ticket-detail').replaceChildren();adminEl('reply-form').hidden=true;adminEl('admin-password').value='';}
 async function adminRequest(path,options={}){
   try{return await feedbackRequest('/admin'+path,{...options,headers:{Authorization:'Bearer '+adminToken,...options.headers}});}
   catch(error){if(error.status===401||error.status===403)logout();throw error;}
@@ -23,11 +30,11 @@ async function loadAnalytics(){
   try {
     const rows=await adminRequest('/analytics');
     const days=new Map();let total=0;
-    for(const row of rows){const value=Number(row.views);total+=value;const counts=days.get(row.day)||{calculator:0,assembler:0,feedback:0};counts[row.page]=value;days.set(row.day,counts);}
+    for(const row of rows){const value=Number(row.views);total+=value;const counts=days.get(row.day)||{calculator:0,assembler:0,feedback:0,guides:0};counts[row.page]=value;days.set(row.day,counts);}
     adminEl('analytics-rows').replaceChildren();
     for(const [day,counts] of days){
       const tr=document.createElement('tr');
-      for(const value of [day,counts.calculator+counts.assembler+counts.feedback,counts.calculator,counts.assembler,counts.feedback]){const td=document.createElement('td');td.textContent=typeof value==='number'?value.toLocaleString('zh-CN'):value;tr.append(td);}
+      for(const value of [day,counts.calculator+counts.assembler+counts.feedback+counts.guides,counts.calculator,counts.assembler,counts.feedback,counts.guides]){const td=document.createElement('td');td.textContent=typeof value==='number'?value.toLocaleString('zh-CN'):value;tr.append(td);}
       adminEl('analytics-rows').append(tr);
     }
     status.textContent=`近30天共 ${total.toLocaleString('zh-CN')} 次页面访问。${rows.length?'':'接入后开始统计。'}`;
@@ -35,7 +42,7 @@ async function loadAnalytics(){
 }
 adminEl('admin-login').addEventListener('submit',async event=>{
   event.preventDefault();const form=event.currentTarget;form.inert=true;adminStatus.textContent='正在登录…';
-  try{const result=await feedbackRequest('/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:adminEl('admin-email').value,password:adminEl('admin-password').value})});adminToken=result.accessToken;adminEl('admin-password').value='';form.hidden=true;adminEl('admin-workspace').hidden=false;listPage=0;await Promise.all([loadTickets(),loadAnalytics()]);}
+  try{const result=await feedbackRequest('/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:adminEl('admin-email').value,password:adminEl('admin-password').value})});adminToken=result.accessToken;setAdminPvExclusion(result.expiresIn);adminEl('admin-password').value='';form.hidden=true;adminEl('admin-workspace').hidden=false;listPage=0;await Promise.all([loadTickets(),loadAnalytics()]);}
   catch(error){adminStatus.textContent=error.message;}finally{form.inert=false;}
 });
 adminEl('reply-form').addEventListener('submit',async event=>{

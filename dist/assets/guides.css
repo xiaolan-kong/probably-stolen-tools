@@ -55,6 +55,7 @@
 .recipe-gallery .purity-label{font-size:14px;padding:9px 12px}
 .recipe-gallery .guide-figure{max-width:440px;margin:16px auto 0}
 .recipe-gallery figcaption{font-size:12px}
+.crime-caps{overflow-x:auto}.crime-caps.guide-table table{min-width:440px}.crime-caps td{white-space:nowrap!important;overflow-wrap:normal}
 .image-guide>.guide-related{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;font-size:14px}
 @media(max-width:1000px){.article-layout{grid-template-columns:190px minmax(0,1fr);gap:24px}.recipe-gallery{gap:20px}.recipe-gallery .recipe{padding:16px}}
 @media(max-width:760px){.article-layout{display:block}.guide-collections{grid-template-columns:1fr;gap:36px}.image-guide .recipe-shortcuts{grid-template-columns:1fr 1fr}.recipe-gallery{grid-template-columns:1fr}.recipe-gallery .recipe{max-width:540px;width:100%;margin:auto}.guide-type-nav{gap:12px}.guide-type-nav a{padding:14px}.guide-type-nav span{line-height:1.7}.guide-article .guide-figure{max-width:400px}}

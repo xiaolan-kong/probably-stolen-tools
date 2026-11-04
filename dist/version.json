@@ -1,11 +1,22 @@
 {
-  "version": "0.4.0",
+  "version": "0.4.1",
   "rules": "VERSION 100 / Build 26284217",
-  "checkedDate": "2026-10-30",
+  "checkedDate": "2026-11-04",
   "feedback": "connected",
   "assembler": "formal-12-machines-and-legacy-demo",
   "guides": [
+    "crime-cleanup",
+    "crime-visual",
+    "water-formal",
     "return-customers",
     "water-recipes"
-  ]
+  ],
+  "guideRules": {
+    "crime": "Build 26284217",
+    "crimeReset": "Build 26337366",
+    "crimeVisual": "Build 26284217",
+    "waterBuyers": "Build 26263409",
+    "waterPurifier": "Build 26284217"
+  },
+  "backendMigration": "202611040001_guides_page_views.sql"
 }

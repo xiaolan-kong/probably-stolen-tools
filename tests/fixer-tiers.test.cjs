@@ -54,6 +54,8 @@ for(const [t,none,once] of [[1,2721,4722],[2,4270,9150],[3,6512,17736]]) {
   }
 }
 const html=fs.readFileSync(path.join(__dirname,'../dist/index.html'),'utf8');
-for(const cap of [499,779,2721,4722,4270,9150,6512,17736])assert(html.includes(`<td>${cap}</td>`));
+for(const page of [html,fs.readFileSync(path.join(__dirname,'../dist/guide-crime-cleanup.html'),'utf8')]) {
+ for(const cap of [499,779,2721,4722,4270,9150,6512,17736])assert(page.includes(`<td>${cap}</td>`));
+}
 assert(html.includes('不包含罚款或派警后补救'));
 console.log(`PASS: ${checks} tier transitions and complete plan replays; strict caps and +1; tier validation.`);

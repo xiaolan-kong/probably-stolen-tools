@@ -31,3 +31,27 @@ for (const page of ['index.html','assembler.html','guides.html','guide-return-cu
 assert(article.includes('https://www.xiaoheihe.cn/app/bbs/link/193981053'));
 assert(!/imgheybox|看评论区/.test(article));
 console.log('PASS: separate article/image guides, eight chapters, four native tables, reciprocal links, preserved anchors and mobile TOC.');
+
+// Follow real local links, including cross-page fragments and the preserved historical anchors.
+const guidePages=['guides.html','guide-return-customers.html','guide-water-recipes.html','guide-crime-cleanup.html','guide-water-formal.html','guide-crime-visual.html'];
+for(const page of guidePages) {
+ const html=fs.readFileSync(path.join(dist,page),'utf8');
+ const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
+ assert.equal(new Set(ids).size,ids.length,`${page}: duplicate anchors`);
+ for(const [,ref] of html.matchAll(/(?:src|href)="([^"]+)"/g)) {
+  if(ref.startsWith('https://')||ref==='./')continue;
+  const [file,anchor]=ref.split('#'),target=path.join(dist,(file||page).split('?')[0]);
+  assert(fs.existsSync(target),`${page}: missing ${ref}`);
+  if(anchor)assert(fs.readFileSync(target,'utf8').includes(`id="${anchor}"`),`${page}: broken ${ref}`);
+ }
+}
+for(const page of ['guide-crime-cleanup.html','guide-water-formal.html','guide-crime-visual.html']) {
+ const html=fs.readFileSync(path.join(dist,page),'utf8');
+ assert(directory.includes(`href="${page}"`)||directory.includes(`href="${page}#`));
+ assert(html.includes('未完成实机验收')&&html.includes('Build 262'));
+}
+assert(article.includes('href="guide-water-formal.html"')&&gallery.includes('href="guide-water-formal.html"'));
+const assembler=fs.readFileSync(path.join(dist,'assembler.html'),'utf8');
+assert(assembler.includes('2026-10-30')&&assembler.includes('2.3.0'));
+assert(!assembler.includes('2.0.0 已公开')&&!assembler.includes('搜索源码已同步当前'));
+console.log('PASS: current and historical guide links/resources/anchors, evidence boundaries and dated assembler snapshot.');
