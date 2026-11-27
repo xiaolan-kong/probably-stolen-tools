@@ -2,7 +2,7 @@
 (function(root){
   'use strict';
   const A=typeof module==='object'?require('./assembler-model.js'):root.Assembler;
-  const goalFor=(m,options)=>options.targets?.[m.identifier]||{primary:A.profiles[m.identifier].primary};
+  const goalFor=(m,options)=>{const g=options.targets?.[m.identifier]||{primary:A.profiles[m.identifier].primary};return {...g,requirements:[...(g.requirements||[]),...(m.requiredModules||[])]};};
   const raw=(m,e,g)=>A.metric(m,e,g.primary);
   const even=n=>n%1===.5?Math.floor(n)+Math.floor(n)%2:Math.round(n);
   const sharedOutput=(ml,count)=>even(Math.fround(Math.fround(ml*1000)/Math.fround(1+Math.fround(.25*(count-1)))))/1000;
@@ -32,7 +32,7 @@
       const available=new Set(A.availablePieces(snapshot,m,options.locks,options.borrow).map(p=>p.key));
       for(const pl of p.placements){if(used.has(pl.key)||!available.has(pl.key))throw Error('联合方案重复使用或借用了不可用模组。');used.add(pl.key);}
       const e=A.evaluate(m,snapshot.pieces,p.placements),g=goalFor(m,options);
-      A.validateGoal(m,g);
+      A.validateGoal(m,options.targets?.[m.identifier]||g);
       if(A.statDeficit(e,g)||A.requirementDeficit(new Map(snapshot.pieces.map(p=>[p.key,p])),p.placements,g))throw Error('联合方案未满足每台机器的限制或必选模组数量。');
       clean.machines[m.key]={placements:p.placements.map(pl=>({...pl})),evaluation:e};
     }
@@ -41,7 +41,7 @@
   // Reassign only physically interchangeable instances, after the whole allocation is known.
   function preferLocalPieces(snapshot,machines,options,candidate) {
     const clean=validateJoint(snapshot,machines,options,candidate),groups=new Map();
-    const identity=p=>JSON.stringify([p.identifier,p.kind,...['performance','efficiency','quality'].map(k=>p.base[k]),p.shape.width,p.shape.height,[...p.shape.cells].sort((a,b)=>a.y-b.y||a.x-b.x),p.effects,[...(p.allowed||[])].sort(),p.variantIdentity||'']);
+    const identity=p=>JSON.stringify([p.identifier,p.kind,...['performance','efficiency','quality'].map(k=>p.base[k]),p.shape.width,p.shape.height,[...p.shape.cells].sort((a,b)=>a.y-b.y||a.x-b.x),p.effects,p.mergedEffects,p.enabledBase,p.moduleSkillEligible!==false,[...(p.allowed||[])].sort(),p.variantIdentity||'']);
     const pieces=new Map(snapshot.pieces.map(p=>[p.key,p]));
     for(const m of machines)for(const pl of clean.machines[m.key].placements){const id=identity(pieces.get(pl.key));if(!groups.has(id))groups.set(id,[]);groups.get(id).push({m,pl});}
     const available=new Map(machines.map(m=>[m.key,new Set(A.availablePieces(snapshot,m,options.locks,options.borrow).map(p=>p.key))]));

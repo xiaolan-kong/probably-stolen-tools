@@ -1,9 +1,9 @@
-import './assembler-model.js';
-import './assembler-joint.js';
+import './assembler-model.js?v=2.5.1';
+import './assembler-joint.js?v=2.5.1';
 let enginePromise;
 async function engine() {
   if(!enginePromise)enginePromise=(async()=>{
-    const {dotnet}=await import('./planner/_framework/dotnet.js');
+    const {dotnet}=await import('./planner/_framework/dotnet.js?v=2.5.1');
     const runtime=await dotnet.withDebugging(0).create();
     runtime.setModuleImports('planner',{publish:json=>postMessage(JSON.parse(json))});
     return runtime.getAssemblyExports(runtime.getConfig().mainAssemblyName);
@@ -16,7 +16,7 @@ async function engine() {
 self.addEventListener('message', async ({data}) => {
   if(!['parse','search','joint'].includes(data?.type))return;
   try {
-    if(data.type==='parse') { postMessage({type:'parsed',snapshot:Assembler.readSave(data.text)}); return; }
+    if(data.type==='parse') { postMessage({type:'parsed',snapshot:Assembler.readSave(data.text,data.options)}); return; }
     const {snapshot,machines,options}=data;
     for(const machine of machines)Assembler.validateGoal(machine,options.targets[machine.identifier]);
     postMessage({type:'loading',message:'正在准备搜索器，首次加载稍需等待。存档留在本机。'});

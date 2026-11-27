@@ -23,6 +23,7 @@ jobs:
           node tests/model.test.cjs
           node tests/fixer-tiers.test.cjs
           node tests/assembler-formal.test.cjs
+          node tests/assembler-upgrade.test.cjs
           node tests/ranges.test.cjs
           node tests/theme.test.cjs
           node tests/additions.test.cjs

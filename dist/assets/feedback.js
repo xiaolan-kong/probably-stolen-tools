@@ -2,6 +2,22 @@
 // Empty endpoint keeps the local prototype; configured endpoints use real submission.
 (() => {
   const $=id=>document.getElementById(id),dialog=$('feedback-dialog');
+  const guide = document.body.classList.contains('guide-page');
+  dialog.innerHTML = `<button type="button" class="close" data-close-feedback aria-label="关闭反馈">×</button>
+<h2 id="feedback-title">反馈问题</h2><p>哪里不对，或希望增加什么？文字和截图一起告诉我们。</p>
+<p class="feedback-notice">访问时仅发送页面类别用于累计每日访问量；不设置访客标识，不发送计算输入。反馈仅在提交时发送你填写的文字、图片和勾选的附带信息。截图请避开账号、密码等私人内容。</p>
+<form id="feedback-form">
+<div hidden aria-hidden="true"><label for="feedback-website">Website</label><input id="feedback-website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+<label for="feedback-type">反馈类型</label><select id="feedback-type"><option>计算结果不符</option><option>页面使用问题</option><option>功能建议</option><option>其他</option></select>
+<label for="feedback-message">问题描述</label><textarea id="feedback-message" rows="4" maxlength="3000" required placeholder="做了什么？预期怎样？实际出现了什么？"></textarea>
+<div id="feedback-dropzone"><strong>粘贴或拖入截图</strong><p>截图后直接按 <kbd>Ctrl</kbd> + <kbd>V</kbd>，不用保存文件</p><div class="feedback-image-actions"><button type="button" id="feedback-paste">粘贴截图</button><label class="feedback-file-button">选择图片<input id="feedback-images" type="file" accept="image/png,image/jpeg,image/webp" multiple aria-describedby="feedback-image-hint" aria-label="选择图片"></label></div></div><p id="feedback-image-hint" class="field-hint">最多 3 张，单张不超过 5 MB，支持 JPG、PNG、WebP。</p><div id="feedback-previews"></div><p id="feedback-file-error" role="alert" hidden></p>
+
+<label class="inline-check"><input id="feedback-context" type="checkbox"> <span id="feedback-context-label"></span></label><details class="feedback-context"><summary>查看附带的信息</summary><pre id="feedback-context-preview"></pre></details>
+<button type="submit" class="primary">提交反馈</button><p id="feedback-status" role="status"></p>
+</form>`;
+  $('feedback-context-label').textContent = dialog.dataset.contextLabel;
+  $('feedback-context').checked = dialog.hasAttribute('data-include-context');
+  if (guide) $('feedback-type').value = '页面使用问题';
   document.querySelector('.site-header a[aria-current=page]')?.addEventListener('click',event=>event.preventDefault());
   let pictures = [], pending = null;
   const submit=$('feedback-form').querySelector('[type=submit]');
@@ -14,6 +30,7 @@
   }
   function changed(){pending=null;$('feedback-status').replaceChildren();}
   function context() {
+    if (guide) return [document.title, location.pathname].join('\n');
     if(window.assemblerFeedbackContext)return window.assemblerFeedbackContext();
     return ['深空当铺工具站 · 犯罪规则：正式版 VERSION 100 / Build 26284217', '当前填写（未必已生成）：', describeDraft(draft()),
       generated ? `方案状态：${isStale() ? '已过期，输入已修改' : '与输入一致'}\n生成方案时的输入：\n${describeDraft(generated.draft)}\n当前查看：${$('result-title').textContent}\n${$('actions').innerText}` : '方案状态：尚未生成'
@@ -32,14 +49,16 @@
       card.append(img, label, remove); return card;
     }));
   }
+  function previewContext() {
+    const empty = guide ? '不附带攻略页面信息。' : '不附带当前输入和方案。';
+    $('feedback-context-preview').textContent = $('feedback-context').checked ? context() : empty;
+  }
   document.querySelectorAll('[data-feedback]').forEach(button => button.addEventListener('click', () => {
-    $('feedback-context-preview').textContent = $('feedback-context').checked ? context() : '不附带当前输入和方案。';
+    previewContext();
     dialog.showModal();
   }));
   document.querySelector('[data-close-feedback]').addEventListener('click', () => dialog.close());
-  $('feedback-context').addEventListener('change', () => {
-    $('feedback-context-preview').textContent = $('feedback-context').checked ? context() : '不附带当前输入和方案。';
-  });
+  $('feedback-context').addEventListener('change', previewContext);
   function addPictures(files) {
     if (!files.length) return;
     const error = pictures.length + files.length > 3 ? '最多添加 3 张截图，请先移除不需要的图片。'

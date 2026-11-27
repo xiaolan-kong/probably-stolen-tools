@@ -1,9 +1,13 @@
 {
-  "version": "0.4.1",
+  "version": "0.4.3",
   "rules": "VERSION 100 / Build 26284217",
-  "checkedDate": "2026-11-04",
+  "checkedDate": "2026-11-27",
   "feedback": "connected",
-  "assembler": "formal-12-machines-and-legacy-demo",
+  "assembler": "mod-core-2.5.1",
+  "assemblerBuild": 26525552,
+  "assemblerSourceTag": "v2.5.1",
+  "assemblerSourceCommit": "1e75df23a1dc2532b78e61af733c334a78347c64",
+  "assemblerScope": "12 vanilla machines; explicit ModuleUpgrade 2.1.0 stacks; runtime-only goals and Mod patches excluded",
   "guides": [
     "crime-cleanup",
     "crime-visual",

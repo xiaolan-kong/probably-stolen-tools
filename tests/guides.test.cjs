@@ -36,6 +36,8 @@ console.log('PASS: separate article/image guides, eight chapters, four native ta
 const guidePages=['guides.html','guide-return-customers.html','guide-water-recipes.html','guide-crime-cleanup.html','guide-water-formal.html','guide-crime-visual.html'];
 for(const page of guidePages) {
  const html=fs.readFileSync(path.join(dist,page),'utf8');
+ assert(html.includes('data-feedback>反馈问题</button>') && html.includes('id="feedback-dialog"') && html.includes('assets/feedback.js'),page+' feedback');
+ assert(html.includes(`href="guides.html" aria-current="${page==='guides.html'?'page':'location'}"`),page+' directory link');
  const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
  assert.equal(new Set(ids).size,ids.length,`${page}: duplicate anchors`);
  for(const [,ref] of html.matchAll(/(?:src|href)="([^"]+)"/g)) {
@@ -52,6 +54,7 @@ for(const page of ['guide-crime-cleanup.html','guide-water-formal.html','guide-c
 }
 assert(article.includes('href="guide-water-formal.html"')&&gallery.includes('href="guide-water-formal.html"'));
 const assembler=fs.readFileSync(path.join(dist,'assembler.html'),'utf8');
-assert(assembler.includes('2026-10-30')&&assembler.includes('2.3.0'));
+assert(assembler.includes('v2.5.1')&&assembler.includes('Build 26525552'));
+assert(assembler.includes('本页尚不支持')&&assembler.includes('需要实时游戏规则'));
 assert(!assembler.includes('2.0.0 已公开')&&!assembler.includes('搜索源码已同步当前'));
 console.log('PASS: current and historical guide links/resources/anchors, evidence boundaries and dated assembler snapshot.');

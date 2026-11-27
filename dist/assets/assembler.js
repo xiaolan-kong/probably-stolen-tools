@@ -67,6 +67,12 @@
         fields.append(selectField(`${title} 第二目标`,axes.filter(([v])=>v!==g.primary),g.secondary,v=>{invalidate();g.secondary=v;}));
       }
       card.append(fields);
+      if(fixed||g.preferred!=null)card.append(button('通用目标',()=>{invalidate();if(fixed){g.primary=g.general?.primary||'quality';g.secondary=g.general?.secondary||'performance';}g.preferred=null;g.custom=true;renderTargets();}));
+      if(!fixed&&['mirage_projector','security_alarm','desequencer','water_purifier'].includes(id)&&(id!=='water_purifier'||snapshot.formal))card.append(button('产出快捷目标',()=>{invalidate();g.general={primary:g.primary,secondary:g.secondary};g.primary='outcome';g.secondary='power';g.preferred=A.targetPresets(snapshot,id,'outcome').at(-1)?.[0]??null;g.custom=false;renderTargets();}));
+      if(id==='printer')for(const m of items){
+        card.append(el('p',`${name(m)}：${m.inputName||'未放入打印芯片'}`,'target-context'));
+        for(const r of m.requiredModules||[]){const p=snapshot.pieces.find(p=>p.identifier===r.identifier);card.append(el('p',`芯片自动必选：${p?.name||r.identifier} 至少 ${r.count} 件；缺原料时也可先配装。`,'muted'));}
+      }
       if(id==='mirage_projector'){const a=snapshot.attraction;card.append(el('p',a?`存档当前店铺 ${num(a.current)} · 基础 ${num(a.base)} − 垃圾扣减 ${num(a.penalty)} = 有效基础 ${num(a.effective)} · ${a.hardMode?'困难':'普通'}模式`:'存档缺少店铺吸引力信息，仅可设置本机贡献。','target-context'));if(snapshot.machines.filter(m=>m.identifier===id).length>1)card.append(el('p','多台投影仪共用一个加成，后运行的覆盖前一台，不叠加。预览为本机运行后的店铺吸引力。','muted'));}
       if(g.primary!=='power'){
         const presets=A.targetPresets(snapshot,id,g.primary),target=el('div',null,'target-fields');
@@ -87,17 +93,20 @@
   async function importFile(file){
     const ticket=++revision;stop(true);snapshot=null;for(const key of Object.keys(history))delete history[key];jointSeed=null;moves={};guideOpen={};bestPlans={};selected.clear();locks.clear();targets={};result=run=null;$('save-bar').hidden=true;go(1);
     if(!file||!file.size||file.size>40*1024*1024){error('请选择非空且不超过 40 MB 的存档。');return;}$('import-status').textContent='正在读取存档…';
-    try{const text=await file.text();if(ticket!==revision)return;worker??=new Worker('assets/assembler-worker.js',{type:'module'});worker.onerror=()=>{if(ticket===revision){stop();error('存档读取失败，请重试。');}};
-      worker.onmessage=({data})=>{if(ticket!==revision)return;if(data.type==='error'){stop();error(data.message);$('import-status').textContent='读取未完成，请检查存档。';return;}if(data.type!=='parsed')return;stop();snapshot=data.snapshot;$('save-status').textContent=`${file.name} · 第 ${snapshot.day??'?'} 天 · ${snapshot.machines.length} 台机器 · ${snapshot.pieces.length} 件模组／节点`;$('save-bar').hidden=false;go(2);if(!snapshot.machines.length)error(snapshot.warnings.join('；'));};worker.postMessage({type:'parse',text});
+    try{const text=await file.text();if(ticket!==revision)return;worker??=new Worker('assets/assembler-worker.js?v=2.5.1',{type:'module'});worker.onerror=()=>{if(ticket===revision){stop();error('存档读取失败，请重试。');}};
+      worker.onmessage=({data})=>{if(ticket!==revision)return;if(data.type==='error'){stop();error(data.message);$('import-status').textContent='读取未完成，请检查存档。';return;}if(data.type!=='parsed')return;stop();snapshot=data.snapshot;$('save-status').textContent=`${file.name} · 第 ${snapshot.day??'?'} 天 · ${snapshot.machines.length} 台机器 · ${snapshot.pieces.length} 件模组／节点`;$('save-bar').hidden=false;go(2);if(!snapshot.machines.length)error(snapshot.warnings.join('；'));};worker.postMessage({type:'parse',text,options:{rules:$('save-rules').value,moduleUpgrade:$('module-upgrade').checked}});
     }catch(e){if(ticket===revision){stop();error(e.message);}}
   }
   function startSearch(event){event.preventDefault();if(busy||!selected.size)return;error('');const machines=selection(),options={targets:structuredClone(targets),borrow:$('borrow').checked,locks:[...locks],...A.searchBudget($('search-mode').value)};
     const searchKey=A.searchContextKey(mode,machines,options);
     let retainedBest=null;try{if(bestPlans[searchKey])retainedBest=A.validateJoint(snapshot,machines,options,bestPlans[searchKey]);}catch{delete bestPlans[searchKey];}
     const ticket=++revision;stop();result=retainedBest;run={mode,machines,options,searchKey,retained:!!retainedBest};searchPreviewSignature="";activeKey=machines[0].key;busy=true;$('search-button').disabled=true;$('search-progress').hidden=false;$('stop-search').hidden=false;$('progress').value=0;$('search-status').textContent=mode==='joint'?'正在搜索共享库存中的整体方案…':'正在搜索装配方案…';renderSearchBest();updateSteps();
-    try{worker??=new Worker('assets/assembler-worker.js',{type:'module'});worker.onerror=()=>{if(ticket===revision){stop();error('计算任务失败，请重试。');}};worker.onmessage=({data})=>{if(ticket!==revision)return;if(data.type==='error'){stop();error(data.message);return;}
+    try{worker??=new Worker('assets/assembler-worker.js?v=2.5.1',{type:'module'});worker.onerror=()=>{if(ticket===revision){stop();error('计算任务失败，请重试。');}};worker.onmessage=({data})=>{if(ticket!==revision)return;if(data.type==='error'){stop();error(data.message);return;}
       if(data.type==='loading'){$('progress').removeAttribute('value');$('search-status').textContent=data.message;return;}
-      if(data.best){try{result=A.preferLocalPieces(snapshot,machines,options,mode==='joint'?data.best:{machines:{[machines[0].key]:data.best}});}catch(e){stop();error(e.message);return;}}
+      if(data.best){try{
+        const candidate=mode==='joint'?data.best:{machines:{[machines[0].key]:data.best}};
+        result=snapshot.formal?A.validateJoint(snapshot,machines,options,candidate):A.preferLocalPieces(snapshot,machines,options,candidate);
+      }catch(e){stop();error(e.message);return;}}
       if(result){jointSeed=Object.fromEntries(Object.entries(result.machines).map(([key,p])=>[key,p.placements]));bestPlans[searchKey]=result;}renderSearchBest();
       $('progress').value=Math.min(100,(data.elapsed||0)/(options.exhaustive?300:options.seconds)*100);
       const phase=data.phase==='exhaustive'?'正在检查剩余排列':'正在寻优';
@@ -238,9 +247,9 @@
   window.assemblerFeedbackContext=()=>JSON.stringify({tool:'模块组装器',version:snapshot?.version||null,mode,selected:selection().map(m=>({type:m.identifier,key:m.key})),locks:[...locks],borrow:$('borrow').checked,targets,status:busy?'计算中':result?'已生成':'未生成',results:result?Object.fromEntries(Object.entries(result.machines).map(([key,p])=>[key,{performance:p.evaluation.performance,quality:p.evaluation.quality,power:p.evaluation.power,output:p.evaluation.output}])):null},null,2);
   document.addEventListener('pointerdown',e=>{if(!$('piece-tooltip').hidden&&!e.target.closest('#piece-tooltip,.piece-shape,.source-piece'))hideTooltip();});
   window.addEventListener('resize',hideTooltip);window.addEventListener('scroll',()=>{if(!compactDetails())hideTooltip();});
-  const saveSession=ToolSession.bind('assembler-formal-v1',()=>({snapshot,mode,step:busy&&result?4:step,grouping,selected:[...selected],locks:[...locks],targets,result,run,activeKey,history,jointSeed,moves,guideOpen,bestPlans,borrow:$('borrow').checked,searchMode:$('search-mode').value,saveStatus:$('save-status').textContent,resultStatus:busy?'搜索已暂停 · 保留离开页面前找到的方案':$('result-status').textContent}));
+  const saveSession=ToolSession.bind('assembler-core-2.5.1',()=>({snapshot,mode,step:busy&&result?4:step,grouping,selected:[...selected],locks:[...locks],targets,result,run,activeKey,history,jointSeed,moves,guideOpen,bestPlans,borrow:$('borrow').checked,searchMode:$('search-mode').value,saveStatus:$('save-status').textContent,resultStatus:busy?'搜索已暂停 · 保留离开页面前找到的方案':$('result-status').textContent}));
   function restoreSession(){
-    const saved=ToolSession.read('assembler-formal-v1');if(!saved)return;
+    const saved=ToolSession.read('assembler-core-2.5.1');if(!saved)return;
     try{
       if(!['single','joint'].includes(saved.mode))return;
       mode=saved.mode;grouping=saved.grouping==='function'?'function':'area';
